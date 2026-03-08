@@ -2,47 +2,16 @@ import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import fs from "fs";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /* ==============================
-   CLIENT CONFIG (env-var driven)
-   Set these per Railway service
+   PLATFORM CONFIG
 ============================== */
-const CLIENT_NAME    = process.env.CLIENT_NAME    || "HopePal Ministry";
-const CLIENT_SLUG    = process.env.CLIENT_SLUG    || "default";
-const MESSAGE_SOURCE = process.env.MESSAGE_SOURCE || `${CLIENT_NAME} Chat`;
-const CLIENT_DIR     = process.env.CLIENT_DIR     || CLIENT_SLUG; // subfolder name in repo
-
-/* ==============================
-   SERVE STATIC FILES
-   Serves client subfolder first,
-   then falls back to root
-============================== */
-const clientPath = join(__dirname, CLIENT_DIR);
-app.use(express.static(clientPath));   // e.g. /otr/app.html, /otr/reader.html
-app.use(express.static(__dirname));    // root fallback (index.html, shared assets)
-
-/* ==============================
-   SUPABASE CLIENT (lazy init)
-============================== */
-function getSupabase() {
-  return createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
-}
-
-/* ==============================
-   LIVE STATE (in-memory)
-============================== */
-let LIVE_STATE = {
-  isLive:    false,
-  updatedAt: null,
-  source:    "control-url"
-};
+const PLATFORM_NAME = "HopePal";
 
 /* ==============================
    CORS + BODY PARSERS
@@ -59,9 +28,95 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* ==============================
-   MINISTRY MESSAGE ENDPOINT
+   SUPABASE — PER CLIENT
+   Env var convention:
+   OTR_SUPABASE_URL
+   OTR_SUPABASE_SERVICE_ROLE_KEY
+   OTR_READER_PASSWORD
+   Falls back to generic if not set.
 ============================== */
-app.post("/ministry-message", async (req, res) => {
+function getSupabase(clientSlug) {
+  const slug = clientSlug.toUpperCase();
+  const url  = process.env[`${slug}_SUPABASE_URL`]              || process.env.SUPABASE_URL;
+  const key  = process.env[`${slug}_SUPABASE_SERVICE_ROLE_KEY`] || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return createClient(url, key);
+}
+
+function getReaderPassword(clientSlug) {
+  const slug = clientSlug.toUpperCase();
+  return process.env[`${slug}_READER_PASSWORD`] || process.env.READER_PASSWORD;
+}
+
+/* ==============================
+   LIVE STATE (per client, in-memory)
+============================== */
+const LIVE_STATES = {};
+
+function getLiveState(clientSlug) {
+  if (!LIVE_STATES[clientSlug]) {
+    LIVE_STATES[clientSlug] = { isLive: false, updatedAt: null, source: "control-url" };
+  }
+  return LIVE_STATES[clientSlug];
+}
+
+/* ==============================
+   ROOT STATIC ASSETS
+============================== */
+app.use(express.static(__dirname, { index: false }));
+
+/* ==============================
+   PLATFORM ROUTES
+   /         → index.html  (HopePal landing page)
+   /app      → app.html    (HopePal generic demo)
+   /reader   → reader.html (HopePal demo reader)
+============================== */
+app.get("/", (req, res) => {
+  res.sendFile(join(__dirname, "index.html"));
+});
+
+app.get("/app", (req, res) => {
+  res.sendFile(join(__dirname, "app.html"));
+});
+
+app.get("/reader", (req, res) => {
+  res.sendFile(join(__dirname, "reader.html"));
+});
+
+/* ==============================
+   CLIENT PAGE ROUTES
+   /otr         → otr/app.html
+   /otr/reader  → otr/reader.html
+============================== */
+app.get("/:client", (req, res, next) => {
+  const clientSlug = req.params.client.toLowerCase();
+  const clientDir  = join(__dirname, clientSlug);
+  const appFile    = join(clientDir, "app.html");
+
+  if (!fs.existsSync(clientDir) || !fs.statSync(clientDir).isDirectory()) return next();
+  if (!fs.existsSync(appFile)) return res.status(404).send(`No app found for: ${clientSlug}`);
+
+  console.log(`[${PLATFORM_NAME}] /${clientSlug} → ${clientSlug}/app.html`);
+  res.sendFile(appFile);
+});
+
+app.get("/:client/reader", (req, res, next) => {
+  const clientSlug = req.params.client.toLowerCase();
+  const clientDir  = join(__dirname, clientSlug);
+  const readerFile = join(clientDir, "reader.html");
+
+  if (!fs.existsSync(clientDir) || !fs.statSync(clientDir).isDirectory()) return next();
+  if (!fs.existsSync(readerFile)) return res.status(404).send(`No reader found for: ${clientSlug}`);
+
+  console.log(`[${PLATFORM_NAME}] /${clientSlug}/reader → ${clientSlug}/reader.html`);
+  res.sendFile(readerFile);
+});
+
+/* ==============================
+   MINISTRY MESSAGE ENDPOINT
+   POST /otr/ministry-message
+============================== */
+app.post("/:client/ministry-message", async (req, res) => {
+  const clientSlug = req.params.client.toLowerCase();
   const { name, message, source } = req.body || {};
 
   if (!message || message.trim().length < 2) {
@@ -69,33 +124,34 @@ app.post("/ministry-message", async (req, res) => {
   }
 
   try {
-    const supabase = getSupabase();
+    const supabase = getSupabase(clientSlug);
     const { error } = await supabase
       .from("ministry_messages")
       .insert([{
         name:    name?.trim() || "Anonymous",
         message: message.trim(),
-        source:  source || MESSAGE_SOURCE
+        source:  source || `${clientSlug} ministry chat`
       }]);
 
     if (error) {
-      console.error("Supabase insert error:", error);
+      console.error(`[${clientSlug}] Supabase insert error:`, error);
       return res.status(500).json({ error: "Failed to save message" });
     }
 
     return res.json({ success: true });
   } catch (err) {
-    console.error("Ministry message error:", err);
+    console.error(`[${clientSlug}] Message error:`, err);
     return res.status(500).json({ error: "Server error" });
   }
 });
 
 /* ==============================
    READER MESSAGES ENDPOINT
-   (password protected)
+   GET /otr/messages
 ============================== */
-app.get("/messages", async (req, res) => {
-  const readerPassword = process.env.READER_PASSWORD;
+app.get("/:client/messages", async (req, res) => {
+  const clientSlug     = req.params.client.toLowerCase();
+  const readerPassword = getReaderPassword(clientSlug);
   const provided       = req.headers["x-reader-password"];
 
   if (!readerPassword || provided !== readerPassword) {
@@ -103,7 +159,7 @@ app.get("/messages", async (req, res) => {
   }
 
   try {
-    const supabase = getSupabase();
+    const supabase = getSupabase(clientSlug);
     const { data, error } = await supabase
       .from("ministry_messages")
       .select("id, name, message, source, created_at")
@@ -111,55 +167,76 @@ app.get("/messages", async (req, res) => {
       .limit(100);
 
     if (error) {
-      console.error("Supabase fetch error:", error);
+      console.error(`[${clientSlug}] Supabase fetch error:`, error);
       return res.status(500).json({ error: "Failed to fetch messages" });
     }
 
     return res.json({ messages: data });
   } catch (err) {
-    console.error("Reader fetch error:", err);
+    console.error(`[${clientSlug}] Reader fetch error:`, err);
     return res.status(500).json({ error: "Server error" });
   }
 });
 
 /* ==============================
-   LIVE CONTROL — URL TRIGGERS
+   LIVE CONTROL
+   GET /otr/live/on
+   GET /otr/live/off
+   GET /otr/live-status
 ============================== */
-app.get("/live/on", (req, res) => {
-  LIVE_STATE.isLive    = true;
-  LIVE_STATE.updatedAt = new Date().toISOString();
-  LIVE_STATE.source    = "control-url";
-  console.log(`[${CLIENT_NAME}] LIVE STATE: ON`);
-  return res.json({ ok: true, ...LIVE_STATE });
+app.get("/:client/live/on", (req, res) => {
+  const clientSlug    = req.params.client.toLowerCase();
+  const state         = getLiveState(clientSlug);
+  state.isLive        = true;
+  state.updatedAt     = new Date().toISOString();
+  console.log(`[${clientSlug}] LIVE: ON`);
+  return res.json({ ok: true, ...state });
 });
 
-app.get("/live/off", (req, res) => {
-  LIVE_STATE.isLive    = false;
-  LIVE_STATE.updatedAt = new Date().toISOString();
-  LIVE_STATE.source    = "control-url";
-  console.log(`[${CLIENT_NAME}] LIVE STATE: OFF`);
-  return res.json({ ok: true, ...LIVE_STATE });
+app.get("/:client/live/off", (req, res) => {
+  const clientSlug    = req.params.client.toLowerCase();
+  const state         = getLiveState(clientSlug);
+  state.isLive        = false;
+  state.updatedAt     = new Date().toISOString();
+  console.log(`[${clientSlug}] LIVE: OFF`);
+  return res.json({ ok: true, ...state });
 });
 
-/* ==============================
-   LIVE STATUS (FRONTEND POLLING)
-============================== */
-app.get("/live-status", (req, res) => {
+app.get("/:client/live-status", (req, res) => {
+  const clientSlug = req.params.client.toLowerCase();
   res.setHeader("Cache-Control", "no-store");
-  return res.json(LIVE_STATE);
+  return res.json(getLiveState(clientSlug));
 });
 
 /* ==============================
    HEALTH / INFO
 ============================== */
 app.get("/__whoami", (req, res) => {
+  const clients = fs.readdirSync(__dirname).filter(f => {
+    const fullPath = join(__dirname, f);
+    return fs.statSync(fullPath).isDirectory()
+      && !f.startsWith('.')
+      && f !== 'node_modules';
+  });
+
   res.json({
-    service:  `hopepal-${CLIENT_SLUG}`,
-    client:   CLIENT_NAME,
-    status:   "running",
-    version:  "2026-03-08",
-    routes:   ["/ministry-message", "/messages", "/live/on", "/live/off", "/live-status"],
-    live:     LIVE_STATE
+    platform:   PLATFORM_NAME,
+    status:     "running",
+    version:    "2026-03-08",
+    clients,
+    routes: {
+      platform:  ["GET /", "GET /app", "GET /reader"],
+      perClient: [
+        "GET  /:client",
+        "GET  /:client/reader",
+        "POST /:client/ministry-message",
+        "GET  /:client/messages",
+        "GET  /:client/live/on",
+        "GET  /:client/live/off",
+        "GET  /:client/live-status",
+      ]
+    },
+    liveStates: LIVE_STATES
   });
 });
 
@@ -167,5 +244,6 @@ app.get("/__whoami", (req, res) => {
    START SERVER
 ============================== */
 app.listen(PORT, () => {
-  console.log(`[HopePal] ${CLIENT_NAME} service running on port ${PORT}`);
+  console.log(`[${PLATFORM_NAME}] Platform running on port ${PORT}`);
+  console.log(`[${PLATFORM_NAME}] /__whoami to see all active clients`);
 });
