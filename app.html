@@ -44,6 +44,7 @@
     .nav-bar { display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid #eee; background: #fafafa; border-radius: 0 0 10px 10px; }
     .nav-bar a { font-size: 12px; opacity: 0.7; transition: opacity 0.2s; }
     .nav-bar a:hover { opacity: 1; }
+    .demo-banner { background: #1a1a2e; color: #F59E0B; font-size: 11px; font-weight: 700; text-align: center; padding: 6px; letter-spacing: 1px; text-transform: uppercase; }
     @media (max-width: 520px) {
       .chat-container { margin: 0; border-radius: 0; border: none; min-height: 100vh; }
       .chat-header { border-radius: 0; }
@@ -54,6 +55,9 @@
 </head>
 <body>
   <div class="chat-container">
+
+    <div class="demo-banner">⚡ HopePal Platform Demo — Not a live ministry</div>
+
     <header class="chat-header" id="chatHeader">
       <span class="header-title" id="headerTitle">Loading…</span>
       <span id="liveBadge" class="live-badge offline">⚪ OFFLINE</span>
@@ -96,115 +100,76 @@
     </form>
 
     <div class="nav-bar">
-      <a href="/" id="homeLink">← Ministry Home</a>
+      <a href="/" id="homeLink">← HopePal Home</a>
       <a href="#" id="contactLink">Contact</a>
     </div>
   </div>
 
   <script>
     /* ============================================================
-       HOPEPAL — CLIENT CONFIG BLOCK
-       Edit ONLY this section to white-label for a new client.
-       All other code is shared platform logic — do not modify.
+       HOPEPAL — PLATFORM DEMO CONFIG
+       This is the generic demo at hopepal root.
+       Branded client versions live in /otr/, /client2/, etc.
     ============================================================ */
     const CONFIG = {
-      clientName:      "Sidney's OTR Driver Ministry",
-      clientIcon:      "🚛",
-      brandColor:      "#841617",
-      anonName:        "Anonymous Driver",
-      messageSource:   "OTR Ministry Chat",
-      contactEmail:    "sidney@otrministry.com",
-      donateUrl:       "https://thebotosphere.com",
-      liveAudioStream: "https://a12.asurahosting.com/listen/xsen_radio/radio.mp3",
-      apiBase:         "https://otr-ministry-production.up.railway.app",
-      encKey:          "fF/Gx3ZKFqD4KZTAo5wyu55dledR7EMTitZeeF36Pgg=",
-      welcomeMsg:      "👋 Welcome to Sidney's OTR Driver Ministry! Ask me anything — prayer requests, encouragement, road safety, or just need someone to talk to.",
-      panelSubtext:    "Prayer request, encouragement, or just checking in — we're always here. When we're live, request a shout-out on air!",
-      encBannerText:   "AES-256 Encrypted — Not Stored — Direct to Sidney",
+      clientName:      "HopePal Ministry Demo",
+      clientIcon:      "🙏",
+      brandColor:      "#B45309",
+      anonName:        "Anonymous",
+      messageSource:   "HopePal Demo",
+      contactEmail:    "hello@hopepal.com",
+      donateUrl:       "https://peak-platforms.com",
+      liveAudioStream: "",
+      apiBase:         "",   // demo — no live backend
+      encKey:          "",   // demo — no real encryption key
+      welcomeMsg:      "👋 Welcome to the HopePal platform demo! This is what your branded ministry app will look like. Ready to deploy for your ministry? Visit hopepal.com to get started.",
+      panelSubtext:    "This is a demo. Your branded deployment will send real encrypted messages directly to your ministry inbox.",
+      encBannerText:   "AES-256 Encrypted — Not Stored — Direct to Your Ministry",
     };
     /* ============================================================
-       END CONFIG — platform code below, do not edit
+       END CONFIG
     ============================================================ */
 
     /* ── APPLY CONFIG TO DOM ── */
-    document.getElementById('pageTitle').textContent      = CONFIG.clientName;
-    document.getElementById('headerTitle').textContent    = `${CONFIG.clientIcon} ${CONFIG.clientName}`;
-    document.getElementById('chatHeader').style.background = CONFIG.brandColor;
-    document.getElementById('listenLiveBtn').style.background = CONFIG.brandColor;
+    document.getElementById('pageTitle').textContent           = CONFIG.clientName;
+    document.getElementById('headerTitle').textContent         = `${CONFIG.clientIcon} ${CONFIG.clientName}`;
+    document.getElementById('chatHeader').style.background     = CONFIG.brandColor;
+    document.getElementById('listenLiveBtn').style.background  = CONFIG.brandColor;
     document.getElementById('sendFanMessage').style.background = CONFIG.brandColor;
-    document.getElementById('encBannerText').textContent  = CONFIG.encBannerText;
-    document.getElementById('panelSub').textContent       = CONFIG.panelSubtext;
-    document.getElementById('welcomeMsg').textContent     = CONFIG.welcomeMsg;
-    document.getElementById('homeLink').href              = '/';
-    document.getElementById('contactLink').href           = `mailto:${CONFIG.contactEmail}`;
-    document.getElementById('contactLink').textContent    = 'Contact';
-    document.querySelector('.fan-message-header').style.color = CONFIG.brandColor;
+    document.getElementById('encBannerText').textContent       = CONFIG.encBannerText;
+    document.getElementById('panelSub').textContent            = CONFIG.panelSubtext;
+    document.getElementById('welcomeMsg').textContent          = CONFIG.welcomeMsg;
+    document.getElementById('contactLink').href                = `mailto:${CONFIG.contactEmail}`;
+    document.getElementById('contactLink').textContent         = 'Contact';
+    document.querySelector('.fan-message-header').style.color  = CONFIG.brandColor;
 
-    /* ── AES-256-GCM ENCRYPTION ── */
-    async function getKey() {
-      const raw = Uint8Array.from(atob(CONFIG.encKey), c => c.charCodeAt(0));
-      return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt']);
-    }
-
-    async function encryptMessage(text) {
-      const key = await getKey();
-      const iv  = crypto.getRandomValues(new Uint8Array(12));
-      const enc = new TextEncoder().encode(text);
-      const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc);
-      const combined = new Uint8Array(iv.byteLength + ct.byteLength);
-      combined.set(iv, 0);
-      combined.set(new Uint8Array(ct), iv.byteLength);
-      return btoa(String.fromCharCode(...combined));
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
       const messages      = document.getElementById('messages');
-      const liveBadge     = document.getElementById('liveBadge');
-      const audioCard     = document.getElementById('xsen-audio-card');
-      const audioEl       = document.getElementById('xsenAudio');
-      const audioStatus   = document.getElementById('audioStatus');
-      const listenLiveBtn = document.getElementById('listenLiveBtn');
-      const donateBtn     = document.getElementById('donateBtn');
-      const fanNameInput  = document.getElementById('fanName');
       const fanMsgInput   = document.getElementById('fanMessage');
       const sendFanMsgBtn = document.getElementById('sendFanMessage');
       const fanMsgStatus  = document.getElementById('fanMessageStatus');
       const form          = document.getElementById('chatForm');
       const input         = document.getElementById('userInput');
+      const donateBtn     = document.getElementById('donateBtn');
+      const listenLiveBtn = document.getElementById('listenLiveBtn');
 
-      /* ── SEND ENCRYPTED MESSAGE ── */
-      sendFanMsgBtn?.addEventListener('click', async (e) => {
+      /* ── DEMO: simulate send ── */
+      sendFanMsgBtn?.addEventListener('click', (e) => {
         e.preventDefault();
-        const name    = fanNameInput?.value.trim();
         const message = fanMsgInput?.value.trim();
         if (!message) { fanMsgStatus.textContent = 'Please enter a message.'; return; }
-        fanMsgStatus.textContent = 'Encrypting & sending…';
-        try {
-          const encrypted = await encryptMessage(message);
-          const res = await fetch(`${CONFIG.apiBase}/ministry-message`, {
-            method: 'POST',
-            body: new URLSearchParams({
-              name:    name || CONFIG.anonName,
-              message: encrypted,
-              source:  CONFIG.messageSource
-            })
-          });
-          if (!res.ok) throw new Error('Send failed');
-          fanMsgStatus.textContent = '✅ Message received — we\'ll be in touch. Safe travels!';
-          fanMsgInput.value = '';
-        } catch (err) {
-          fanMsgStatus.textContent = '❌ Could not send message. Please try again.';
-        }
+        fanMsgStatus.textContent = '✅ Demo only — in a live deployment this would be encrypted and sent to your ministry inbox.';
+        fanMsgInput.value = '';
       });
 
-      /* ── CHAT BOT ── */
-      form?.addEventListener('submit', async (e) => {
+      /* ── DEMO: chat bot ── */
+      form?.addEventListener('submit', (e) => {
         e.preventDefault();
         const text = input.value.trim();
         if (!text) return;
         addMsg(text, 'user');
         input.value = '';
-        addMsg('🙏 Ministry AI coming soon — use the message panel above to reach the ministry directly.', 'bot');
+        addMsg('🙏 This is a HopePal platform demo. In your live deployment, this can connect to a ministry AI or route to your chaplain team.', 'bot');
       });
 
       function addMsg(text, sender) {
@@ -214,46 +179,16 @@
         div.textContent = text;
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
-        return div;
       }
 
-      /* ── LIVE AUDIO ── */
-      function playAudio() {
-        if (!audioEl || !audioCard) return;
-        audioCard.style.display = 'block';
-        audioEl.src = `${CONFIG.liveAudioStream}?ts=${Date.now()}`;
-        audioEl.play()
-          .then(() => { if (audioStatus) audioStatus.textContent = '🔊 Live broadcast playing'; })
-          .catch(() => { if (audioStatus) audioStatus.textContent = 'Tap ▶ to start audio'; });
-      }
-
+      /* ── DEMO: live buttons ── */
       listenLiveBtn?.addEventListener('click', () => {
-        addMsg('🔴 Connecting to the live broadcast…', 'bot');
-        playAudio();
+        addMsg('📻 Live broadcast integration is available in deployed ministries. This is a demo.', 'bot');
       });
 
       donateBtn?.addEventListener('click', () => {
         window.open(CONFIG.donateUrl, '_blank', 'noopener');
       });
-
-      /* ── LIVE STATUS POLLING ── */
-      async function updateLiveStatus() {
-        if (!liveBadge) return;
-        try {
-          const res  = await fetch(`${CONFIG.apiBase}/live-status`, { cache: 'no-store' });
-          const data = await res.json();
-          if (data.isLive) {
-            liveBadge.textContent = '🔴 LIVE';
-            liveBadge.className   = 'live-badge live';
-          } else {
-            liveBadge.textContent = '⚪ OFFLINE';
-            liveBadge.className   = 'live-badge offline';
-          }
-        } catch (e) { console.warn('Live status check failed:', e); }
-      }
-
-      updateLiveStatus();
-      setInterval(updateLiveStatus, 20000);
     });
   </script>
 </body>

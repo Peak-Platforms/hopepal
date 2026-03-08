@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title id="pageTitle">Ministry Reader</title>
+  <title id="pageTitle">Ministry Reader — Demo</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, -apple-system, sans-serif; background: #0d0d0d; color: #e8e8e8; min-height: 100vh; }
 
-    /* ── LOGIN SCREEN ── */
-    #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .demo-banner { background: #1a1a2e; color: #F59E0B; font-size: 11px; font-weight: 700; text-align: center; padding: 8px; letter-spacing: 1px; text-transform: uppercase; position: fixed; top: 0; left: 0; right: 0; z-index: 999; }
+
+    #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; padding-top: 48px; }
     .login-card { background: #1a1a1a; border: 1px solid #333; border-radius: 16px; padding: 36px 28px; width: 100%; max-width: 360px; text-align: center; }
     .login-icon { font-size: 48px; margin-bottom: 16px; }
     .login-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 6px; }
@@ -20,10 +21,11 @@
     .login-btn:hover { opacity: 0.9; }
     .login-error { font-size: 13px; color: #ff6b6b; margin-top: 10px; min-height: 18px; }
     .enc-note { font-size: 11px; color: #00e676; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .demo-hint { font-size: 12px; color: #555; margin-top: 14px; }
+    .demo-hint strong { color: #F59E0B; }
 
-    /* ── READER SCREEN ── */
-    #readerScreen { display: none; }
-    .reader-header { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    #readerScreen { display: none; padding-top: 32px; }
+    .reader-header { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 32px; z-index: 10; }
     .reader-header-title { font-size: 16px; font-weight: 700; color: #fff; }
     .reader-header-right { display: flex; align-items: center; gap: 10px; }
     #refreshBtn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; }
@@ -47,140 +49,99 @@
 </head>
 <body>
 
+  <div class="demo-banner">⚡ HopePal Platform Demo — Not a live ministry inbox</div>
+
   <!-- LOGIN SCREEN -->
   <div id="loginScreen">
     <div class="login-card">
-      <div class="login-icon" id="loginIcon">⏳</div>
-      <div class="login-title" id="loginTitle">Ministry Reader</div>
-      <div class="login-sub" id="loginSub">Private message inbox</div>
-      <input type="password" id="passwordInput" placeholder="Enter your password" />
-      <button class="login-btn" id="loginBtn">Open Inbox</button>
+      <div class="login-icon" id="loginIcon">🙏</div>
+      <div class="login-title">Ministry Reader</div>
+      <div class="login-sub" id="loginSub">HopePal platform demo inbox</div>
+      <input type="password" id="passwordInput" placeholder="Enter demo password" />
+      <button class="login-btn" id="loginBtn">Open Demo Inbox</button>
       <div class="login-error" id="loginError"></div>
       <div class="enc-note">🔐 AES-256 Encrypted Messages</div>
+      <div class="demo-hint">Demo password: <strong>demo1234</strong></div>
     </div>
   </div>
 
   <!-- READER SCREEN -->
   <div id="readerScreen">
     <div class="reader-header" id="readerHeader">
-      <div class="reader-header-title" id="readerTitle">Ministry Inbox</div>
+      <div class="reader-header-title" id="readerTitle">🙏 Demo Ministry Inbox</div>
       <div class="reader-header-right">
         <button id="refreshBtn">↻ Refresh</button>
         <button id="logoutBtn">Lock</button>
       </div>
     </div>
     <div class="message-count" id="messageCount">Loading messages…</div>
-    <div id="messageList"><div class="loading">Decrypting messages…</div></div>
+    <div id="messageList"><div class="loading">Loading demo messages…</div></div>
   </div>
 
   <script>
     /* ============================================================
-       HOPEPAL — CLIENT CONFIG BLOCK
-       Edit ONLY this section to white-label for a new client.
-       All other code is shared platform logic — do not modify.
+       HOPEPAL — PLATFORM DEMO CONFIG
+       This is the generic demo reader at hopepal root.
+       Branded client readers live in /otr/, /client2/, etc.
     ============================================================ */
     const CONFIG = {
-      clientName:    "Sidney's OTR Driver Ministry",
-      clientIcon:    "🚛",
-      brandColor:    "#841617",
-      anonName:      "Anonymous Driver",
-      loginSubtitle: "Sidney's private message inbox",
-      timezone:      "America/Denver",
-      apiBase:       "https://otr-ministry-production.up.railway.app",
-      encKey:        "fF/Gx3ZKFqD4KZTAo5wyu55dledR7EMTitZeeF36Pgg=",
+      clientName:    "HopePal Ministry Demo",
+      clientIcon:    "🙏",
+      brandColor:    "#B45309",
+      anonName:      "Anonymous",
+      loginSubtitle: "HopePal platform demo inbox",
+      timezone:      "America/Chicago",
+      demoPassword:  "demo1234",
+      demoMessages: [
+        { id: 1, name: "Trucker Mike", message: "Please pray for my family while I'm on the road.", source: "HopePal Demo", created_at: new Date(Date.now() - 3600000).toISOString() },
+        { id: 2, name: "Anonymous",    message: "I've been struggling lately. Just need someone to talk to.", source: "HopePal Demo", created_at: new Date(Date.now() - 7200000).toISOString() },
+        { id: 3, name: "Road Warrior", message: "Thank you for being here at 2am. God bless.", source: "HopePal Demo", created_at: new Date(Date.now() - 10800000).toISOString() },
+      ]
     };
     /* ============================================================
-       END CONFIG — platform code below, do not edit
+       END CONFIG
     ============================================================ */
 
     /* ── APPLY CONFIG TO DOM ── */
-    document.getElementById('pageTitle').textContent  = `Reader — ${CONFIG.clientName}`;
-    document.getElementById('loginIcon').textContent  = CONFIG.clientIcon;
-    document.getElementById('loginTitle').textContent = 'Ministry Reader';
-    document.getElementById('loginSub').textContent   = CONFIG.loginSubtitle;
-    document.getElementById('loginBtn').style.background  = CONFIG.brandColor;
-    document.getElementById('readerHeader').style.background = CONFIG.brandColor;
-    document.getElementById('readerTitle').textContent = `${CONFIG.clientIcon} Ministry Inbox`;
-    document.querySelector('.login-card input').style.borderColor; // focused color applied below
+    document.getElementById('pageTitle').textContent              = `Reader — ${CONFIG.clientName}`;
+    document.getElementById('loginIcon').textContent              = CONFIG.clientIcon;
+    document.getElementById('loginSub').textContent               = CONFIG.loginSubtitle;
+    document.getElementById('loginBtn').style.background          = CONFIG.brandColor;
+    document.getElementById('readerHeader').style.background      = CONFIG.brandColor;
+    document.getElementById('readerTitle').textContent            = `${CONFIG.clientIcon} Demo Ministry Inbox`;
+
     document.querySelector('.login-card input').addEventListener('focus', function() {
       this.style.borderColor = CONFIG.brandColor;
     });
 
-    let sessionPassword = null;
-
-    /* ── CRYPTO ── */
-    async function getKey() {
-      const raw = Uint8Array.from(atob(CONFIG.encKey), c => c.charCodeAt(0));
-      return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['decrypt']);
-    }
-
-    async function decryptMessage(b64) {
-      try {
-        const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-        const iv       = combined.slice(0, 12);
-        const ct       = combined.slice(12);
-        const key      = await getKey();
-        const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
-        return new TextDecoder().decode(plainBuf);
-      } catch (e) {
-        return '[Unable to decrypt]';
-      }
-    }
-
-    function isEncrypted(text) {
-      return /^[A-Za-z0-9+/]{40,}={0,2}$/.test(text.trim());
-    }
-
-    /* ── LOGIN ── */
-    document.getElementById('loginBtn').addEventListener('click', async () => {
+    /* ── DEMO LOGIN (no server call) ── */
+    document.getElementById('loginBtn').addEventListener('click', () => {
       const pw = document.getElementById('passwordInput').value.trim();
       if (!pw) return;
-      document.getElementById('loginError').textContent = 'Checking…';
-      try {
-        const res = await fetch(`${CONFIG.apiBase}/messages`, {
-          headers: { 'x-reader-password': pw }
-        });
-        if (res.status === 401) {
-          document.getElementById('loginError').textContent = '❌ Incorrect password.';
-          return;
-        }
-        if (!res.ok) throw new Error('Server error');
-        sessionPassword = pw;
-        const data = await res.json();
-        document.getElementById('loginScreen').style.display  = 'none';
-        document.getElementById('readerScreen').style.display = 'block';
-        renderMessages(data.messages);
-      } catch (err) {
-        document.getElementById('loginError').textContent = '❌ Could not connect. Try again.';
+
+      if (pw !== CONFIG.demoPassword) {
+        document.getElementById('loginError').textContent = '❌ Try: demo1234';
+        return;
       }
+
+      document.getElementById('loginScreen').style.display  = 'none';
+      document.getElementById('readerScreen').style.display = 'block';
+      renderMessages(CONFIG.demoMessages);
     });
 
     document.getElementById('passwordInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('loginBtn').click();
     });
 
-    /* ── RENDER MESSAGES ── */
-    async function renderMessages(msgs) {
+    /* ── RENDER DEMO MESSAGES ── */
+    function renderMessages(msgs) {
       const list  = document.getElementById('messageList');
       const count = document.getElementById('messageCount');
 
-      if (!msgs || msgs.length === 0) {
-        count.textContent = 'No messages yet';
-        list.innerHTML = `
-          <div class="empty">
-            <div class="empty-icon">📭</div>
-            <div class="empty-text">No messages yet — check back after going live.</div>
-          </div>`;
-        return;
-      }
-
-      count.textContent = `${msgs.length} message${msgs.length !== 1 ? 's' : ''} — newest first`;
+      count.textContent = `${msgs.length} demo message${msgs.length !== 1 ? 's' : ''} — in a live deployment these are AES-256 decrypted`;
       list.innerHTML = '';
 
-      for (const msg of msgs) {
-        const encrypted = isEncrypted(msg.message);
-        const text      = encrypted ? await decryptMessage(msg.message) : msg.message;
-
+      msgs.forEach((msg, i) => {
         const date = new Date(msg.created_at).toLocaleString('en-US', {
           timeZone: CONFIG.timezone,
           month: 'short', day: 'numeric',
@@ -189,23 +150,19 @@
 
         const card = document.createElement('div');
         card.className = 'msg-card';
-
-        // Highlight newest message with brand color border
-        if (list.children.length === 0) {
-          card.style.borderLeft = `3px solid ${CONFIG.brandColor}`;
-        }
+        if (i === 0) card.style.borderLeft = `3px solid ${CONFIG.brandColor}`;
 
         card.innerHTML = `
           <div class="msg-meta">
             <span class="msg-name">${CONFIG.clientIcon} ${escHtml(msg.name || CONFIG.anonName)}</span>
             <span class="msg-time">${date}</span>
           </div>
-          <div class="msg-text">${escHtml(text)}</div>
-          ${encrypted ? '<div class="enc-tag">🔐 Decrypted</div>' : ''}
+          <div class="msg-text">${escHtml(msg.message)}</div>
+          <div class="enc-tag">🙏 Demo Message</div>
           <div class="msg-source">${escHtml(msg.source || '')}</div>
         `;
         list.appendChild(card);
-      }
+      });
     }
 
     function escHtml(str) {
@@ -216,23 +173,13 @@
         .replace(/"/g, '&quot;');
     }
 
-    /* ── REFRESH ── */
-    document.getElementById('refreshBtn').addEventListener('click', async () => {
-      document.getElementById('messageList').innerHTML = '<div class="loading">Refreshing…</div>';
-      try {
-        const res  = await fetch(`${CONFIG.apiBase}/messages`, {
-          headers: { 'x-reader-password': sessionPassword }
-        });
-        const data = await res.json();
-        renderMessages(data.messages);
-      } catch (err) {
-        document.getElementById('messageList').innerHTML = '<div class="loading">Could not refresh.</div>';
-      }
+    /* ── REFRESH (demo — reloads same messages) ── */
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      renderMessages(CONFIG.demoMessages);
     });
 
     /* ── LOGOUT ── */
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      sessionPassword = null;
       document.getElementById('readerScreen').style.display = 'none';
       document.getElementById('loginScreen').style.display  = 'flex';
       document.getElementById('passwordInput').value = '';
