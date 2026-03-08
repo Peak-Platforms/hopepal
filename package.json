@@ -1,0 +1,21 @@
+{
+  "name": "hopepal-platform",
+  "version": "1.0.0",
+  "description": "HopePal — Encrypted Ministry Communication Platform by Peak Platforms",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "express": "^4.18.2"
+  },
+  "keywords": ["hopepal", "ministry", "encrypted", "peak-platforms"],
+  "author": "Peak Platforms <hello@peak-platforms.com>",
+  "license": "UNLICENSED"
+}

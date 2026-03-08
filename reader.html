@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">Ministry Reader</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0d0d0d; color: #e8e8e8; min-height: 100vh; }
+
+    /* ── LOGIN SCREEN ── */
+    #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .login-card { background: #1a1a1a; border: 1px solid #333; border-radius: 16px; padding: 36px 28px; width: 100%; max-width: 360px; text-align: center; }
+    .login-icon { font-size: 48px; margin-bottom: 16px; }
+    .login-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .login-sub { font-size: 13px; color: #888; margin-bottom: 28px; }
+    .login-card input { width: 100%; padding: 12px 14px; font-size: 16px; background: #111; border: 1px solid #444; border-radius: 8px; color: #fff; font-family: inherit; margin-bottom: 14px; letter-spacing: 2px; }
+    .login-card input:focus { outline: none; }
+    .login-btn { width: 100%; padding: 12px; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+    .login-btn:hover { opacity: 0.9; }
+    .login-error { font-size: 13px; color: #ff6b6b; margin-top: 10px; min-height: 18px; }
+    .enc-note { font-size: 11px; color: #00e676; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+    /* ── READER SCREEN ── */
+    #readerScreen { display: none; }
+    .reader-header { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .reader-header-title { font-size: 16px; font-weight: 700; color: #fff; }
+    .reader-header-right { display: flex; align-items: center; gap: 10px; }
+    #refreshBtn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; }
+    #refreshBtn:hover { background: rgba(255,255,255,0.25); }
+    #logoutBtn { background: none; border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .message-count { font-size: 12px; color: rgba(255,255,255,0.6); padding: 8px 16px; border-bottom: 1px solid #222; background: #141414; }
+    #messageList { padding: 12px; }
+    .msg-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .msg-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .msg-name { font-size: 13px; font-weight: 700; color: #fff; }
+    .msg-time { font-size: 11px; color: #666; }
+    .msg-text { font-size: 14px; color: #ccc; line-height: 1.6; }
+    .msg-source { font-size: 10px; color: #555; margin-top: 8px; text-align: right; }
+    .enc-tag { display: inline-flex; align-items: center; gap: 3px; background: rgba(0,230,118,0.08); color: #00e676; font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-top: 6px; }
+    .loading { text-align: center; padding: 40px 20px; color: #666; font-size: 14px; }
+    .empty { text-align: center; padding: 60px 20px; color: #555; }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-text { font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-icon" id="loginIcon">⏳</div>
+      <div class="login-title" id="loginTitle">Ministry Reader</div>
+      <div class="login-sub" id="loginSub">Private message inbox</div>
+      <input type="password" id="passwordInput" placeholder="Enter your password" />
+      <button class="login-btn" id="loginBtn">Open Inbox</button>
+      <div class="login-error" id="loginError"></div>
+      <div class="enc-note">🔐 AES-256 Encrypted Messages</div>
+    </div>
+  </div>
+
+  <!-- READER SCREEN -->
+  <div id="readerScreen">
+    <div class="reader-header" id="readerHeader">
+      <div class="reader-header-title" id="readerTitle">Ministry Inbox</div>
+      <div class="reader-header-right">
+        <button id="refreshBtn">↻ Refresh</button>
+        <button id="logoutBtn">Lock</button>
+      </div>
+    </div>
+    <div class="message-count" id="messageCount">Loading messages…</div>
+    <div id="messageList"><div class="loading">Decrypting messages…</div></div>
+  </div>
+
+  <script>
+    /* ============================================================
+       HOPEPAL — CLIENT CONFIG BLOCK
+       Edit ONLY this section to white-label for a new client.
+       All other code is shared platform logic — do not modify.
+    ============================================================ */
+    const CONFIG = {
+      clientName:    "Sidney's OTR Driver Ministry",
+      clientIcon:    "🚛",
+      brandColor:    "#841617",
+      anonName:      "Anonymous Driver",
+      loginSubtitle: "Sidney's private message inbox",
+      timezone:      "America/Denver",
+      apiBase:       "https://otr-ministry-production.up.railway.app",
+      encKey:        "fF/Gx3ZKFqD4KZTAo5wyu55dledR7EMTitZeeF36Pgg=",
+    };
+    /* ============================================================
+       END CONFIG — platform code below, do not edit
+    ============================================================ */
+
+    /* ── APPLY CONFIG TO DOM ── */
+    document.getElementById('pageTitle').textContent  = `Reader — ${CONFIG.clientName}`;
+    document.getElementById('loginIcon').textContent  = CONFIG.clientIcon;
+    document.getElementById('loginTitle').textContent = 'Ministry Reader';
+    document.getElementById('loginSub').textContent   = CONFIG.loginSubtitle;
+    document.getElementById('loginBtn').style.background  = CONFIG.brandColor;
+    document.getElementById('readerHeader').style.background = CONFIG.brandColor;
+    document.getElementById('readerTitle').textContent = `${CONFIG.clientIcon} Ministry Inbox`;
+    document.querySelector('.login-card input').style.borderColor; // focused color applied below
+    document.querySelector('.login-card input').addEventListener('focus', function() {
+      this.style.borderColor = CONFIG.brandColor;
+    });
+
+    let sessionPassword = null;
+
+    /* ── CRYPTO ── */
+    async function getKey() {
+      const raw = Uint8Array.from(atob(CONFIG.encKey), c => c.charCodeAt(0));
+      return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['decrypt']);
+    }
+
+    async function decryptMessage(b64) {
+      try {
+        const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const iv       = combined.slice(0, 12);
+        const ct       = combined.slice(12);
+        const key      = await getKey();
+        const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+        return new TextDecoder().decode(plainBuf);
+      } catch (e) {
+        return '[Unable to decrypt]';
+      }
+    }
+
+    function isEncrypted(text) {
+      return /^[A-Za-z0-9+/]{40,}={0,2}$/.test(text.trim());
+    }
+
+    /* ── LOGIN ── */
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const pw = document.getElementById('passwordInput').value.trim();
+      if (!pw) return;
+      document.getElementById('loginError').textContent = 'Checking…';
+      try {
+        const res = await fetch(`${CONFIG.apiBase}/messages`, {
+          headers: { 'x-reader-password': pw }
+        });
+        if (res.status === 401) {
+          document.getElementById('loginError').textContent = '❌ Incorrect password.';
+          return;
+        }
+        if (!res.ok) throw new Error('Server error');
+        sessionPassword = pw;
+        const data = await res.json();
+        document.getElementById('loginScreen').style.display  = 'none';
+        document.getElementById('readerScreen').style.display = 'block';
+        renderMessages(data.messages);
+      } catch (err) {
+        document.getElementById('loginError').textContent = '❌ Could not connect. Try again.';
+      }
+    });
+
+    document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+
+    /* ── RENDER MESSAGES ── */
+    async function renderMessages(msgs) {
+      const list  = document.getElementById('messageList');
+      const count = document.getElementById('messageCount');
+
+      if (!msgs || msgs.length === 0) {
+        count.textContent = 'No messages yet';
+        list.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">No messages yet — check back after going live.</div>
+          </div>`;
+        return;
+      }
+
+      count.textContent = `${msgs.length} message${msgs.length !== 1 ? 's' : ''} — newest first`;
+      list.innerHTML = '';
+
+      for (const msg of msgs) {
+        const encrypted = isEncrypted(msg.message);
+        const text      = encrypted ? await decryptMessage(msg.message) : msg.message;
+
+        const date = new Date(msg.created_at).toLocaleString('en-US', {
+          timeZone: CONFIG.timezone,
+          month: 'short', day: 'numeric',
+          hour: 'numeric', minute: '2-digit'
+        });
+
+        const card = document.createElement('div');
+        card.className = 'msg-card';
+
+        // Highlight newest message with brand color border
+        if (list.children.length === 0) {
+          card.style.borderLeft = `3px solid ${CONFIG.brandColor}`;
+        }
+
+        card.innerHTML = `
+          <div class="msg-meta">
+            <span class="msg-name">${CONFIG.clientIcon} ${escHtml(msg.name || CONFIG.anonName)}</span>
+            <span class="msg-time">${date}</span>
+          </div>
+          <div class="msg-text">${escHtml(text)}</div>
+          ${encrypted ? '<div class="enc-tag">🔐 Decrypted</div>' : ''}
+          <div class="msg-source">${escHtml(msg.source || '')}</div>
+        `;
+        list.appendChild(card);
+      }
+    }
+
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /* ── REFRESH ── */
+    document.getElementById('refreshBtn').addEventListener('click', async () => {
+      document.getElementById('messageList').innerHTML = '<div class="loading">Refreshing…</div>';
+      try {
+        const res  = await fetch(`${CONFIG.apiBase}/messages`, {
+          headers: { 'x-reader-password': sessionPassword }
+        });
+        const data = await res.json();
+        renderMessages(data.messages);
+      } catch (err) {
+        document.getElementById('messageList').innerHTML = '<div class="loading">Could not refresh.</div>';
+      }
+    });
+
+    /* ── LOGOUT ── */
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      sessionPassword = null;
+      document.getElementById('readerScreen').style.display = 'none';
+      document.getElementById('loginScreen').style.display  = 'flex';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('loginError').textContent = '';
+    });
+  </script>
+</body>
+</html>
