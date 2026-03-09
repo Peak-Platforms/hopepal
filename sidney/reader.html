@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">Ministry Reader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --brand:       #841617;
+      --brand-glow:  rgba(132,22,23,0.25);
+      --bg:          #0b0b0b;
+      --surface:     #141414;
+      --surface2:    #1c1c1c;
+      --border:      #252525;
+      --border2:     #2e2e2e;
+      --text:        #e2e2e2;
+      --text-muted:  #666;
+      --text-dim:    #444;
+      --green:       #2ecc71;
+      --blue:        #3498db;
+      --orange:      #e67e22;
+      --red:         #e74c3c;
+      --enc-green:   #00e676;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+      --font-mono:    'DM Mono', 'Courier New', monospace;
+      --radius:       12px;
+      --radius-sm:    7px;
+      --transition:   0.2s ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ══════════════════════════════════════════
+       NOTIFICATION BANNER
+    ══════════════════════════════════════════ */
+    #notifBanner {
+      position: fixed;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-top: 3px solid var(--red);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 280px;
+      max-width: 90vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      transition: top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+    }
+    #notifBanner.show { top: 16px; }
+    .notif-icon { font-size: 22px; flex-shrink: 0; }
+    .notif-text { flex: 1; }
+    .notif-title { font-size: 13px; font-weight: 600; color: #fff; }
+    .notif-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .notif-close { color: var(--text-dim); font-size: 16px; cursor: pointer; padding: 2px 4px; }
+    .notif-close:hover { color: var(--text); }
+
+    /* ══════════════════════════════════════════
+       LOGIN SCREEN
+    ══════════════════════════════════════════ */
+    #loginScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, var(--brand-glow), transparent),
+        var(--bg);
+    }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 32px 32px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+      animation: riseIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+
+    .login-icon-wrap {
+      width: 68px; height: 68px;
+      border-radius: 50%;
+      border: 2px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 20px;
+      background: var(--surface2);
+    }
+
+    .login-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    .login-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .login-input-wrap { position: relative; margin-bottom: 14px; }
+    .login-input-wrap input {
+      width: 100%;
+      padding: 13px 16px 13px 42px;
+      font-size: 15px;
+      background: var(--bg);
+      border: 1.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-family: var(--font-mono);
+      letter-spacing: 3px;
+      transition: border-color var(--transition);
+      outline: none;
+    }
+    .login-input-wrap input:focus { border-color: var(--brand); }
+    .login-input-wrap .lock-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-dim); font-size: 15px; pointer-events: none;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity var(--transition), transform var(--transition);
+      letter-spacing: 0.3px;
+    }
+    .login-btn:hover  { opacity: 0.9; transform: translateY(-1px); }
+    .login-btn:active { opacity: 1;   transform: translateY(0); }
+
+    .login-error {
+      font-size: 12px; color: var(--red);
+      margin-top: 10px; min-height: 16px;
+    }
+
+    .enc-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(0,230,118,0.07);
+      border: 1px solid rgba(0,230,118,0.15);
+      color: var(--enc-green);
+      font-size: 10px; font-weight: 600;
+      font-family: var(--font-mono);
+      letter-spacing: 1px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      margin-top: 20px;
+      text-transform: uppercase;
+    }
+
+    /* ══════════════════════════════════════════
+       READER SCREEN
+    ══════════════════════════════════════════ */
+    #readerScreen { display: none; min-height: 100vh; flex-direction: column; }
+
+    /* HEADER */
+    .reader-header {
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+    }
+
+    .header-left { display: flex; flex-direction: column; gap: 1px; }
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.2px;
+    }
+    .header-welcome {
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+      font-weight: 300;
+    }
+
+    .header-right { display: flex; gap: 8px; align-items: center; }
+
+    .hdr-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 12px; font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition);
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .hdr-btn:hover { background: rgba(255,255,255,0.2); }
+    .hdr-btn.ghost { background: transparent; color: rgba(255,255,255,0.6); }
+    .hdr-btn.ghost:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+    .unread-pill {
+      background: var(--red);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      display: none;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.6; }
+    }
+
+    /* FILTER BAR */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .filter-btn {
+      padding: 5px 13px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--text-muted);
+      white-space: nowrap;
+      transition: all var(--transition);
+      font-family: var(--font-body);
+    }
+    .filter-btn:hover { color: var(--text); border-color: #444; }
+    .filter-btn.active { color: #fff; border-color: transparent; }
+    .filter-btn[data-filter="all"].active      { background: #3a3a3a; }
+    .filter-btn[data-filter="unread"].active   { background: #9b2226; }
+    .filter-btn[data-filter="read"].active     { background: #1a6ea8; }
+    .filter-btn[data-filter="claimed"].active  { background: #a04000; }
+    .filter-btn[data-filter="resolved"].active { background: #1a7a40; }
+
+    /* STATUS BAR */
+    .status-bar {
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 6px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      letter-spacing: 0.3px;
+    }
+
+    /* MESSAGE LIST */
+    #messageList { padding: 10px 10px 40px; }
+
+    .msg-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 15px 16px;
+      margin-bottom: 8px;
+      animation: cardIn 0.3s ease both;
+      transition: border-color var(--transition), opacity var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Left status stripe */
+    .msg-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 3px 0 0 3px;
+    }
+    .msg-card[data-status="unread"]::before   { background: var(--red); }
+    .msg-card[data-status="read"]::before     { background: var(--blue); }
+    .msg-card[data-status="claimed"]::before  { background: var(--orange); }
+    .msg-card[data-status="resolved"]::before { background: var(--green); }
+    .msg-card[data-status="resolved"] { opacity: 0.6; }
+
+    .msg-card[data-status="unread"] { border-color: rgba(231,76,60,0.2); }
+
+    .msg-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .msg-sender { display: flex; flex-direction: column; gap: 2px; }
+    .msg-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .msg-time {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .status-pill {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      white-space: nowrap;
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+    }
+    .status-pill.unread   { background: rgba(231,76,60,0.15);  color: #f17a77; }
+    .status-pill.read     { background: rgba(52,152,219,0.15); color: #6bb8e8; }
+    .status-pill.claimed  { background: rgba(230,126,34,0.15); color: #f0a566; }
+    .status-pill.resolved { background: rgba(46,204,113,0.15); color: #6ed9a0; }
+
+    .msg-body {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #c8c8c8;
+      margin-bottom: 10px;
+      word-break: break-word;
+    }
+
+    .enc-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(0,230,118,0.07);
+      border: 1px solid rgba(0,230,118,0.12);
+      color: var(--enc-green);
+      font-size: 9px; font-weight: 600;
+      font-family: var(--font-mono);
+      letter-spacing: 1px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .msg-handler {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    .msg-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .act-btn {
+      padding: 5px 13px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: var(--font-body);
+      transition: opacity var(--transition), transform var(--transition);
+      letter-spacing: 0.2px;
+    }
+    .act-btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+    .act-btn:active { opacity: 1; transform: translateY(0); }
+    .btn-claim   { background: rgba(230,126,34,0.2); color: #f0a566; border: 1px solid rgba(230,126,34,0.25); }
+    .btn-resolve { background: rgba(46,204,113,0.2); color: #6ed9a0; border: 1px solid rgba(46,204,113,0.25); }
+    .btn-reopen  { background: rgba(255,255,255,0.07); color: var(--text-muted); border: 1px solid var(--border2); }
+
+    .msg-source {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 8px;
+      text-align: right;
+      font-family: var(--font-mono);
+    }
+
+    /* EMPTY / LOADING */
+    .loading, .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .empty-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.5; }
+    .empty-text { font-size: 13px; }
+
+    /* NOTIFY PERMISSION BAR */
+    #notifPermBar {
+      display: none;
+      background: rgba(132,22,23,0.12);
+      border-bottom: 1px solid rgba(132,22,23,0.25);
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #ddd;
+      text-align: center;
+    }
+    #notifPermBar button {
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- IN-APP NOTIFICATION BANNER -->
+  <div id="notifBanner" onclick="dismissBanner()">
+    <div class="notif-icon" id="notifBannerIcon">🔔</div>
+    <div class="notif-text">
+      <div class="notif-title" id="notifBannerTitle">New message arrived</div>
+      <div class="notif-sub"  id="notifBannerSub">Tap to view</div>
+    </div>
+    <div class="notif-close" onclick="dismissBanner()">✕</div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-icon-wrap" id="loginIcon">⏳</div>
+      <div class="login-title" id="loginTitle">Ministry Reader</div>
+      <div class="login-sub"   id="loginSub">Private message inbox</div>
+      <div class="login-input-wrap">
+        <span class="lock-icon">🔒</span>
+        <input type="password" id="passwordInput" placeholder="Enter your password" autocomplete="current-password" />
+      </div>
+      <button class="login-btn" id="loginBtn">Open Inbox</button>
+      <div class="login-error" id="loginError"></div>
+      <div class="enc-badge">🔐 AES-256 End-to-End Encrypted</div>
+    </div>
+  </div>
+
+  <!-- READER -->
+  <div id="readerScreen">
+
+    <!-- Notification permission nudge -->
+    <div id="notifPermBar">
+      🔔 Enable browser notifications to get alerted when new messages arrive
+      <button onclick="requestNotifPermission()">Enable</button>
+      <button onclick="document.getElementById('notifPermBar').style.display='none'" style="background:#333;margin-left:4px;">Later</button>
+    </div>
+
+    <div class="reader-header" id="readerHeader">
+      <div class="header-left">
+        <div class="header-title" id="headerTitle">Ministry Inbox</div>
+        <div class="header-welcome" id="headerWelcome"></div>
+      </div>
+      <div class="header-right">
+        <button class="hdr-btn" id="refreshBtn">
+          ↻ Refresh <span class="unread-pill" id="unreadPill"></span>
+        </button>
+        <button class="hdr-btn ghost" id="logoutBtn">Lock</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="unread">🔴 Unread</button>
+      <button class="filter-btn" data-filter="read">🔵 Read</button>
+      <button class="filter-btn" data-filter="claimed">🟠 Claimed</button>
+      <button class="filter-btn" data-filter="resolved">🟢 Resolved</button>
+    </div>
+
+    <div class="status-bar" id="statusBar">Loading…</div>
+    <div id="messageList"><div class="loading">Decrypting messages…</div></div>
+  </div>
+
+  <script>
+    /* ============================================================
+       HOPEPAL — CLIENT CONFIG BLOCK
+       ─────────────────────────────────────────────────────────
+       ONLY edit this section to white-label for a new client.
+       All platform code below is untouched.
+    ============================================================ */
+    const CONFIG = {
+      clientName:    "Sidney's OTR Driver Ministry",           // Full name
+      clientIcon:    "🚛",                            // Emoji icon
+      brandColor:    "#841617",                       // Hex color for header + login btn
+      anonName:      "Anonymous Driver",                     // Default sender name
+      loginSubtitle: "Sidney's private message inbox",         // Login screen subtitle
+      timezone:      "America/Denver",               // Timezone for message timestamps
+      apiBase:       "https://hopepal.life/otr",   // ← change CLIENT to slug
+      encKey:        "fF/Gx3ZKFqD4KZTAo5wyu55dledR7EMTitZeeF36Pgg=",   // AES-256 key (base64)
+      chimeEnabled:  true,                            // Play soft chime on new messages
+    };
+    /* ============================================================
+       END CONFIG — do not edit below this line
+    ============================================================ */
+
+
+    /* ── APPLY BRAND ─────────────────────────────────────── */
+    document.documentElement.style.setProperty('--brand', CONFIG.brandColor);
+    document.documentElement.style.setProperty('--brand-glow', CONFIG.brandColor + '33');
+    document.getElementById('pageTitle').textContent   = `Reader — ${CONFIG.clientName}`;
+    document.getElementById('loginIcon').textContent   = CONFIG.clientIcon;
+    document.getElementById('loginTitle').textContent  = CONFIG.clientName;
+    document.getElementById('loginSub').textContent    = CONFIG.loginSubtitle;
+    document.getElementById('loginBtn').style.background = CONFIG.brandColor;
+    document.getElementById('readerHeader').style.background = CONFIG.brandColor;
+    document.getElementById('headerTitle').textContent = `${CONFIG.clientIcon} Inbox`;
+    document.getElementById('notifBannerIcon').textContent = CONFIG.clientIcon;
+
+
+    /* ── STATE ───────────────────────────────────────────── */
+    let sessionPassword  = null;
+    let readerName       = null;
+    let allMessages      = [];
+    let activeFilter     = "all";
+    let prevUnreadCount  = 0;
+    let bannerTimer      = null;
+
+
+    /* ── CRYPTO ──────────────────────────────────────────── */
+    async function getKey() {
+      const raw = Uint8Array.from(atob(CONFIG.encKey), c => c.charCodeAt(0));
+      return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['decrypt']);
+    }
+
+    async function decryptMessage(b64) {
+      try {
+        const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const iv  = combined.slice(0, 12);
+        const ct  = combined.slice(12);
+        const key = await getKey();
+        const buf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+        return new TextDecoder().decode(buf);
+      } catch { return '[Unable to decrypt]'; }
+    }
+
+    function isEncrypted(t) {
+      return /^[A-Za-z0-9+/]{40,}={0,2}$/.test((t || '').trim());
+    }
+
+
+    /* ── CHIME (Web Audio — no external files) ───────────── */
+    function playChime() {
+      if (!CONFIG.chimeEnabled) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+        notes.forEach((freq, i) => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type      = 'sine';
+          osc.frequency.value = freq;
+          const t = ctx.currentTime + i * 0.18;
+          gain.gain.setValueAtTime(0, t);
+          gain.gain.linearRampToValueAtTime(0.12, t + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+          osc.start(t);
+          osc.stop(t + 0.6);
+        });
+      } catch (e) { /* AudioContext not available */ }
+    }
+
+
+    /* ── BROWSER NOTIFICATIONS ───────────────────────────── */
+    function checkNotifPermission() {
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'default') {
+        document.getElementById('notifPermBar').style.display = 'block';
+      }
+    }
+
+    function requestNotifPermission() {
+      Notification.requestPermission().then(perm => {
+        document.getElementById('notifPermBar').style.display = 'none';
+        if (perm === 'granted') showBanner(1, 'Notifications enabled', 'You\'ll be alerted when messages arrive.');
+      });
+    }
+
+    function fireBrowserNotif(count) {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      try {
+        const n = new Notification(`${CONFIG.clientIcon} ${count} new message${count > 1 ? 's' : ''}`, {
+          body: `Open the ${CONFIG.clientName} inbox`,
+          silent: false,
+        });
+        n.onclick = () => { window.focus(); n.close(); };
+        setTimeout(() => n.close(), 8000);
+      } catch (e) { /* Safari sometimes throws */ }
+    }
+
+
+    /* ── IN-APP BANNER ───────────────────────────────────── */
+    function showBanner(count, title, sub) {
+      const banner = document.getElementById('notifBanner');
+      document.getElementById('notifBannerTitle').textContent = title || `${count} new message${count > 1 ? 's' : ''} arrived`;
+      document.getElementById('notifBannerSub').textContent   = sub   || 'Tap to view';
+      banner.classList.add('show');
+      clearTimeout(bannerTimer);
+      bannerTimer = setTimeout(dismissBanner, 5000);
+    }
+
+    function dismissBanner() {
+      document.getElementById('notifBanner').classList.remove('show');
+      // Scroll to top of list when banner is tapped
+      document.getElementById('messageList').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+
+    /* ── ALERT FOR NEW MESSAGES ──────────────────────────── */
+    function alertNewMessages(count) {
+      if (count <= 0) return;
+      playChime();
+      showBanner(count);
+      fireBrowserNotif(count);
+
+      // Flash unread pill
+      const pill = document.getElementById('unreadPill');
+      pill.textContent  = count;
+      pill.style.display = 'inline';
+    }
+
+
+    /* ── LOGIN ───────────────────────────────────────────── */
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const pw = document.getElementById('passwordInput').value.trim();
+      if (!pw) return;
+      const errEl = document.getElementById('loginError');
+      errEl.textContent = '';
+      document.getElementById('loginBtn').textContent = 'Opening…';
+      try {
+        const res = await fetch(`${CONFIG.apiBase}/messages`, {
+          headers: { 'x-reader-password': pw }
+        });
+        if (res.status === 401) {
+          errEl.textContent = '❌ Incorrect password.';
+          document.getElementById('loginBtn').textContent = 'Open Inbox';
+          return;
+        }
+        if (!res.ok) throw new Error();
+
+        sessionPassword = pw;
+        const data = await res.json();
+        readerName = data.reader;
+
+        document.getElementById('loginScreen').style.display  = 'none';
+        document.getElementById('readerScreen').style.display = 'flex';
+        document.getElementById('headerWelcome').textContent  = `Welcome back, ${readerName}`;
+
+        checkNotifPermission();
+        await renderMessages(data.messages);
+        prevUnreadCount = allMessages.filter(m => m.status === 'unread').length;
+
+      } catch {
+        errEl.textContent = '❌ Could not connect. Try again.';
+        document.getElementById('loginBtn').textContent = 'Open Inbox';
+      }
+    });
+
+    document.getElementById('passwordInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+
+
+    /* ── FILTER TABS ─────────────────────────────────────── */
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        displayMessages();
+      });
+    });
+
+
+    /* ── RENDER MESSAGES ─────────────────────────────────── */
+    async function renderMessages(msgs) {
+      allMessages = await Promise.all(msgs.map(async m => ({
+        ...m,
+        decrypted:    isEncrypted(m.message) ? await decryptMessage(m.message) : m.message,
+        wasEncrypted: isEncrypted(m.message)
+      })));
+      displayMessages();
+    }
+
+    function displayMessages() {
+      const list     = document.getElementById('messageList');
+      const bar      = document.getElementById('statusBar');
+      const pill     = document.getElementById('unreadPill');
+      const unread   = allMessages.filter(m => m.status === 'unread');
+      const filtered = activeFilter === 'all'
+        ? allMessages
+        : allMessages.filter(m => m.status === activeFilter);
+
+      // Unread pill
+      pill.textContent   = unread.length;
+      pill.style.display = unread.length ? 'inline' : 'none';
+
+      // Status bar
+      const parts = [];
+      if (filtered.length) parts.push(`${filtered.length} ${activeFilter === 'all' ? 'total' : activeFilter}`);
+      if (unread.length)   parts.push(`${unread.length} unread`);
+      else                 parts.push('all caught up ✓');
+      bar.textContent = parts.join(' · ');
+
+      if (!filtered.length) {
+        const label = activeFilter === 'all' ? '' : activeFilter + ' ';
+        list.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">No ${label}messages.</div>
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = '';
+      filtered.forEach((msg, i) => {
+        const card = buildCard(msg);
+        card.style.animationDelay = `${i * 0.03}s`;
+        list.appendChild(card);
+      });
+    }
+
+    function buildCard(msg) {
+      const date = new Date(msg.created_at).toLocaleString('en-US', {
+        timeZone: CONFIG.timezone,
+        month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit'
+      });
+
+      let handlerLine = '';
+      if (msg.status === 'claimed'  && msg.claimed_by)  handlerLine = `<div class="msg-handler">🙋 Claimed by ${escHtml(msg.claimed_by)}</div>`;
+      if (msg.status === 'resolved' && msg.resolved_by) handlerLine = `<div class="msg-handler">✅ Resolved by ${escHtml(msg.resolved_by)}</div>`;
+
+      let actions = '';
+      if (['unread','read'].includes(msg.status)) {
+        actions = `
+          <button class="act-btn btn-claim"   onclick="updateStatus('${msg.id}','claim')">🙋 Claim It</button>
+          <button class="act-btn btn-resolve"  onclick="updateStatus('${msg.id}','resolve')">✅ Resolve</button>`;
+      } else if (msg.status === 'claimed') {
+        actions = `
+          <button class="act-btn btn-resolve" onclick="updateStatus('${msg.id}','resolve')">✅ Resolve</button>
+          <button class="act-btn btn-reopen"  onclick="updateStatus('${msg.id}','reopen')">↩ Reopen</button>`;
+      } else if (msg.status === 'resolved') {
+        actions = `<button class="act-btn btn-reopen" onclick="updateStatus('${msg.id}','reopen')">↩ Reopen</button>`;
+      }
+
+      const card = document.createElement('div');
+      card.className      = 'msg-card';
+      card.dataset.id     = msg.id;
+      card.dataset.status = msg.status;
+      card.innerHTML = `
+        <div class="msg-top">
+          <div class="msg-sender">
+            <div class="msg-name">${CONFIG.clientIcon} ${escHtml(msg.name || CONFIG.anonName)}</div>
+            <div class="msg-time">${date}</div>
+          </div>
+          <span class="status-pill ${msg.status}">${msg.status}</span>
+        </div>
+        <div class="msg-body">${escHtml(msg.decrypted)}</div>
+        ${msg.wasEncrypted ? '<div class="enc-tag">🔐 decrypted</div>' : ''}
+        ${handlerLine}
+        <div class="msg-actions">${actions}</div>
+        <div class="msg-source">${escHtml(msg.source || '')}</div>
+      `;
+      return card;
+    }
+
+
+    /* ── UPDATE STATUS ───────────────────────────────────── */
+    window.updateStatus = async (msgId, action) => {
+      try {
+        const res = await fetch(`${CONFIG.apiBase}/messages/${msgId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-reader-password': sessionPassword
+          },
+          body: JSON.stringify({ action })
+        });
+        if (!res.ok) throw new Error();
+
+        const msg = allMessages.find(m => m.id === msgId);
+        if (msg) {
+          if (action === 'claim')   { msg.status = 'claimed';  msg.claimed_by  = readerName; }
+          if (action === 'resolve') { msg.status = 'resolved'; msg.resolved_by = readerName; }
+          if (action === 'reopen')  { msg.status = 'read';     msg.claimed_by  = null; msg.resolved_by = null; }
+        }
+        displayMessages();
+      } catch { alert('Could not update status. Try again.'); }
+    };
+
+
+    /* ── REFRESH ─────────────────────────────────────────── */
+    async function doRefresh(silent = false) {
+      if (!sessionPassword) return;
+      if (!silent) {
+        document.getElementById('messageList').innerHTML = '<div class="loading">Refreshing…</div>';
+      }
+      try {
+        const res  = await fetch(`${CONFIG.apiBase}/messages`, {
+          headers: { 'x-reader-password': sessionPassword }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        await renderMessages(data.messages);
+
+        // Check for new unreads since last poll
+        const newUnread = allMessages.filter(m => m.status === 'unread').length;
+        const diff      = newUnread - prevUnreadCount;
+        if (diff > 0) alertNewMessages(diff);
+        prevUnreadCount = newUnread;
+
+      } catch { /* silently fail on background polls */ }
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', () => doRefresh(false));
+
+    // Auto-poll every 60 seconds
+    setInterval(() => doRefresh(true), 60 * 1000);
+
+    // Also poll when tab becomes visible again after being backgrounded
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && sessionPassword) doRefresh(true);
+    });
+
+
+    /* ── LOGOUT ──────────────────────────────────────────── */
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      sessionPassword = null;
+      readerName      = null;
+      allMessages     = [];
+      prevUnreadCount = 0;
+      document.getElementById('readerScreen').style.display = 'none';
+      document.getElementById('loginScreen').style.display  = 'flex';
+      document.getElementById('passwordInput').value        = '';
+      document.getElementById('loginError').textContent     = '';
+      document.getElementById('loginBtn').textContent       = 'Open Inbox';
+    });
+
+
+    /* ── UTILS ───────────────────────────────────────────── */
+    function escHtml(s) {
+      return String(s || '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+    }
+  </script>
+</body>
+</html>
