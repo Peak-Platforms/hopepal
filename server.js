@@ -239,10 +239,9 @@ app.get("/:client/messages", async (req, res) => {
       .map(m => m.id);
 
     if (unreadIds.length > 0) {
-      // Update each message to add reader to read_by and set status to 'read'
       supabase
         .from("ministry_messages")
-        .update({ status: "read", read_by: supabase.raw(`read_by || '["${reader.name}"]'::jsonb`) })
+        .update({ status: "read" })
         .in("id", unreadIds)
         .eq("status", "unread")
         .then(() => console.log(`[${slug}] Marked ${unreadIds.length} messages read by ${reader.name}`))
