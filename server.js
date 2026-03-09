@@ -7,10 +7,6 @@ import fs from "fs";
 const app = express();
 const PORT = process.env.PORT || 8080;
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/* ==============================
-   PLATFORM CONFIG
-============================== */
 const PLATFORM_NAME = "HopePal";
 
 /* ==============================
@@ -18,7 +14,7 @@ const PLATFORM_NAME = "HopePal";
 ============================== */
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-reader-password");
   res.setHeader("Cache-Control", "no-store");
   if (req.method === "OPTIONS") return res.sendStatus(204);
@@ -29,11 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 
 /* ==============================
    SUPABASE — PER CLIENT
-   Env var convention:
    OTR_SUPABASE_URL
    OTR_SUPABASE_SERVICE_ROLE_KEY
-   OTR_READER_PASSWORD
-   Falls back to generic if not set.
 ============================== */
 function getSupabase(clientSlug) {
   const slug = clientSlug.toUpperCase();
@@ -42,208 +35,300 @@ function getSupabase(clientSlug) {
   return createClient(url, key);
 }
 
-function getReaderPassword(clientSlug) {
+/* ==============================
+   READERS — PER CLIENT
+   OTR_READERS=[
+     {"name":"Sidney","password":"pw1","phone":"+14055551234","email":"sidney@otr.com"},
+     {"name":"Chaplain Bob","password":"pw2","phone":"+14055555678","email":"bob@otr.com"}
+   ]
+============================== */
+function getReaders(clientSlug) {
   const slug = clientSlug.toUpperCase();
-  return process.env[`${slug}_READER_PASSWORD`] || process.env.READER_PASSWORD;
+  const raw  = process.env[`${slug}_READERS`];
+  if (!raw) return [];
+  try { return JSON.parse(raw); }
+  catch (e) { console.error(`[${clientSlug}] Invalid READERS JSON:`, e.message); return []; }
+}
+
+function authenticateReader(clientSlug, providedPassword) {
+  return getReaders(clientSlug).find(r => r.password === providedPassword) || null;
 }
 
 /* ==============================
-   LIVE STATE (per client, in-memory)
+   NOTIFICATIONS
+   TWILIO_ACCOUNT_SID
+   TWILIO_AUTH_TOKEN
+   TWILIO_FROM_NUMBER
+   RESEND_API_KEY
+   RESEND_FROM_EMAIL
+============================== */
+async function notifyReaders(clientSlug, senderName, readerUrl) {
+  const readers = getReaders(clientSlug);
+  if (!readers.length) return;
+
+  const smsBody   = `[HopePal] New message from ${senderName} → ${readerUrl}`;
+  const emailHtml = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+      <h2 style="color:#841617;">New Ministry Message</h2>
+      <p>A new encrypted message arrived from <strong>${senderName}</strong>.</p>
+      <a href="${readerUrl}" style="display:inline-block;background:#841617;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:700;">Open Reader →</a>
+      <p style="color:#999;font-size:12px;margin-top:24px;">HopePal · Peak Platforms</p>
+    </div>
+  `;
+
+  for (const reader of readers) {
+    if (reader.phone && process.env.TWILIO_ACCOUNT_SID) {
+      try {
+        const auth = Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString("base64");
+        const r = await fetch(
+          `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`,
+          {
+            method: "POST",
+            headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ To: reader.phone, From: process.env.TWILIO_FROM_NUMBER, Body: smsBody })
+          }
+        );
+        if (r.ok) console.log(`[${clientSlug}] SMS → ${reader.name}`);
+        else console.error(`[${clientSlug}] SMS failed → ${reader.name}`);
+      } catch (e) { console.error(`[${clientSlug}] SMS error:`, e.message); }
+    }
+
+    if (reader.email && process.env.RESEND_API_KEY) {
+      try {
+        const r = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from:    process.env.RESEND_FROM_EMAIL || "noreply@hopepal.life",
+            to:      reader.email,
+            subject: `New message from ${senderName}`,
+            html:    emailHtml
+          })
+        });
+        if (r.ok) console.log(`[${clientSlug}] Email → ${reader.name}`);
+        else console.error(`[${clientSlug}] Email failed → ${reader.name}`);
+      } catch (e) { console.error(`[${clientSlug}] Email error:`, e.message); }
+    }
+  }
+}
+
+/* ==============================
+   FOLLOW-UP ALERTS
+   Re-notify all readers if a message
+   sits unread for 30 minutes
+============================== */
+async function checkStaleMessages() {
+  // Get all active client folders
+  const clients = fs.readdirSync(__dirname).filter(f => {
+    const p = join(__dirname, f);
+    return fs.statSync(p).isDirectory() && !f.startsWith('.') && f !== 'node_modules';
+  });
+
+  for (const slug of clients) {
+    try {
+      const supabase  = getSupabase(slug);
+      const cutoff    = new Date(Date.now() - 30 * 60 * 1000).toISOString(); // 30 min ago
+      const { data }  = await supabase
+        .from("ministry_messages")
+        .select("id, name")
+        .eq("status", "unread")
+        .lt("created_at", cutoff)
+        .limit(5);
+
+      if (data && data.length > 0) {
+        console.log(`[${slug}] ⚠️  ${data.length} unread message(s) older than 30 min — re-notifying`);
+        const readerUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN || "hopepal.life"}/${slug}/reader`;
+        for (const msg of data) {
+          await notifyReaders(slug, `${msg.name} (FOLLOW-UP — still unread)`, readerUrl);
+        }
+      }
+    } catch (e) {
+      // Skip clients with no Supabase configured
+    }
+  }
+}
+
+// Run stale check every 15 minutes
+setInterval(checkStaleMessages, 15 * 60 * 1000);
+
+/* ==============================
+   LIVE STATE (per client)
 ============================== */
 const LIVE_STATES = {};
-
-function getLiveState(clientSlug) {
-  if (!LIVE_STATES[clientSlug]) {
-    LIVE_STATES[clientSlug] = { isLive: false, updatedAt: null, source: "control-url" };
-  }
-  return LIVE_STATES[clientSlug];
+function getLiveState(slug) {
+  if (!LIVE_STATES[slug]) LIVE_STATES[slug] = { isLive: false, updatedAt: null };
+  return LIVE_STATES[slug];
 }
 
 /* ==============================
-   ROOT STATIC ASSETS
+   STATIC FILE ROUTING
 ============================== */
 app.use(express.static(__dirname, { index: false }));
 
-/* ==============================
-   PLATFORM ROUTES
-   /         → index.html  (HopePal landing page)
-   /app      → app.html    (HopePal generic demo)
-   /reader   → reader.html (HopePal demo reader)
-============================== */
-app.get("/", (req, res) => {
-  res.sendFile(join(__dirname, "index.html"));
-});
+app.get("/",       (req, res) => res.sendFile(join(__dirname, "index.html")));
+app.get("/app",    (req, res) => res.sendFile(join(__dirname, "app.html")));
+app.get("/reader", (req, res) => res.sendFile(join(__dirname, "reader.html")));
 
-app.get("/app", (req, res) => {
-  res.sendFile(join(__dirname, "app.html"));
-});
-
-app.get("/reader", (req, res) => {
-  res.sendFile(join(__dirname, "reader.html"));
-});
-
-/* ==============================
-   CLIENT PAGE ROUTES
-   /otr         → otr/app.html
-   /otr/reader  → otr/reader.html
-============================== */
 app.get("/:client", (req, res, next) => {
-  const clientSlug = req.params.client.toLowerCase();
-  const clientDir  = join(__dirname, clientSlug);
-  const appFile    = join(clientDir, "app.html");
-
-  if (!fs.existsSync(clientDir) || !fs.statSync(clientDir).isDirectory()) return next();
-  if (!fs.existsSync(appFile)) return res.status(404).send(`No app found for: ${clientSlug}`);
-
-  console.log(`[${PLATFORM_NAME}] /${clientSlug} → ${clientSlug}/app.html`);
-  res.sendFile(appFile);
+  const slug = req.params.client.toLowerCase();
+  const dir  = join(__dirname, slug);
+  const file = join(dir, "app.html");
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return next();
+  if (!fs.existsSync(file)) return res.status(404).send(`No app: ${slug}`);
+  res.sendFile(file);
 });
 
 app.get("/:client/reader", (req, res, next) => {
-  const clientSlug = req.params.client.toLowerCase();
-  const clientDir  = join(__dirname, clientSlug);
-  const readerFile = join(clientDir, "reader.html");
-
-  if (!fs.existsSync(clientDir) || !fs.statSync(clientDir).isDirectory()) return next();
-  if (!fs.existsSync(readerFile)) return res.status(404).send(`No reader found for: ${clientSlug}`);
-
-  console.log(`[${PLATFORM_NAME}] /${clientSlug}/reader → ${clientSlug}/reader.html`);
-  res.sendFile(readerFile);
+  const slug = req.params.client.toLowerCase();
+  const dir  = join(__dirname, slug);
+  const file = join(dir, "reader.html");
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return next();
+  if (!fs.existsSync(file)) return res.status(404).send(`No reader: ${slug}`);
+  res.sendFile(file);
 });
 
 /* ==============================
    MINISTRY MESSAGE ENDPOINT
-   POST /otr/ministry-message
+   POST /:client/ministry-message
 ============================== */
 app.post("/:client/ministry-message", async (req, res) => {
-  const clientSlug = req.params.client.toLowerCase();
+  const slug = req.params.client.toLowerCase();
   const { name, message, source } = req.body || {};
+  if (!message || message.trim().length < 2) return res.status(400).json({ error: "Message required" });
 
-  if (!message || message.trim().length < 2) {
-    return res.status(400).json({ error: "Message required" });
-  }
-
+  const senderName = name?.trim() || "Anonymous";
   try {
-    const supabase = getSupabase(clientSlug);
+    const supabase = getSupabase(slug);
     const { error } = await supabase
       .from("ministry_messages")
-      .insert([{
-        name:    name?.trim() || "Anonymous",
-        message: message.trim(),
-        source:  source || `${clientSlug} ministry chat`
-      }]);
+      .insert([{ name: senderName, message: message.trim(), source: source || `${slug} chat`, status: "unread", read_by: [] }]);
 
-    if (error) {
-      console.error(`[${clientSlug}] Supabase insert error:`, error);
-      return res.status(500).json({ error: "Failed to save message" });
-    }
+    if (error) { console.error(`[${slug}] Insert error:`, error); return res.status(500).json({ error: "Failed to save" }); }
+
+    const readerUrl = `${req.protocol}://${req.get("host")}/${slug}/reader`;
+    notifyReaders(slug, senderName, readerUrl).catch(e => console.error(`[${slug}] Notify error:`, e.message));
 
     return res.json({ success: true });
-  } catch (err) {
-    console.error(`[${clientSlug}] Message error:`, err);
-    return res.status(500).json({ error: "Server error" });
-  }
+  } catch (err) { return res.status(500).json({ error: "Server error" }); }
 });
 
 /* ==============================
    READER MESSAGES ENDPOINT
-   GET /otr/messages
+   GET /:client/messages
+   Marks messages as read by this reader
 ============================== */
 app.get("/:client/messages", async (req, res) => {
-  const clientSlug     = req.params.client.toLowerCase();
-  const readerPassword = getReaderPassword(clientSlug);
-  const provided       = req.headers["x-reader-password"];
-
-  if (!readerPassword || provided !== readerPassword) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  const slug     = req.params.client.toLowerCase();
+  const provided = req.headers["x-reader-password"];
+  const reader   = authenticateReader(slug, provided);
+  if (!reader) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    const supabase = getSupabase(clientSlug);
+    const supabase = getSupabase(slug);
     const { data, error } = await supabase
       .from("ministry_messages")
-      .select("id, name, message, source, created_at")
+      .select("id, name, message, source, status, claimed_by, claimed_at, resolved_by, resolved_at, read_by, created_at")
       .order("created_at", { ascending: false })
       .limit(100);
 
-    if (error) {
-      console.error(`[${clientSlug}] Supabase fetch error:`, error);
-      return res.status(500).json({ error: "Failed to fetch messages" });
+    if (error) { console.error(`[${slug}] Fetch error:`, error); return res.status(500).json({ error: "Failed to fetch" }); }
+
+    // Mark unread messages as read by this reader (background, don't block)
+    const unreadIds = data
+      .filter(m => m.status === "unread" && !Array.isArray(m.read_by)?.includes(reader.name))
+      .map(m => m.id);
+
+    if (unreadIds.length > 0) {
+      // Update each message to add reader to read_by and set status to 'read'
+      supabase
+        .from("ministry_messages")
+        .update({ status: "read", read_by: supabase.raw(`read_by || '["${reader.name}"]'::jsonb`) })
+        .in("id", unreadIds)
+        .eq("status", "unread")
+        .then(() => console.log(`[${slug}] Marked ${unreadIds.length} messages read by ${reader.name}`))
+        .catch(e => console.error(`[${slug}] Mark read error:`, e.message));
     }
 
-    return res.json({ messages: data });
-  } catch (err) {
-    console.error(`[${clientSlug}] Reader fetch error:`, err);
-    return res.status(500).json({ error: "Server error" });
+    return res.json({ messages: data, reader: reader.name });
+  } catch (err) { return res.status(500).json({ error: "Server error" }); }
+});
+
+/* ==============================
+   MESSAGE STATUS ENDPOINT
+   PATCH /:client/messages/:id
+   Body: { action: "claim" | "resolve" | "reopen" }
+============================== */
+app.patch("/:client/messages/:id", async (req, res) => {
+  const slug     = req.params.client.toLowerCase();
+  const msgId    = req.params.id;
+  const provided = req.headers["x-reader-password"];
+  const reader   = authenticateReader(slug, provided);
+  if (!reader) return res.status(401).json({ error: "Unauthorized" });
+
+  const { action } = req.body;
+  if (!["claim", "resolve", "reopen"].includes(action)) {
+    return res.status(400).json({ error: "Invalid action" });
   }
+
+  const updates = {
+    claim:   { status: "claimed",  claimed_by: reader.name,  claimed_at: new Date().toISOString() },
+    resolve: { status: "resolved", resolved_by: reader.name, resolved_at: new Date().toISOString() },
+    reopen:  { status: "read",     claimed_by: null,          claimed_at: null, resolved_by: null, resolved_at: null }
+  }[action];
+
+  try {
+    const supabase = getSupabase(slug);
+    const { error } = await supabase
+      .from("ministry_messages")
+      .update(updates)
+      .eq("id", msgId);
+
+    if (error) { console.error(`[${slug}] Status update error:`, error); return res.status(500).json({ error: "Update failed" }); }
+
+    console.log(`[${slug}] Message ${msgId} → ${action} by ${reader.name}`);
+    return res.json({ success: true, action, reader: reader.name });
+  } catch (err) { return res.status(500).json({ error: "Server error" }); }
 });
 
 /* ==============================
    LIVE CONTROL
-   GET /otr/live/on
-   GET /otr/live/off
-   GET /otr/live-status
 ============================== */
 app.get("/:client/live/on", (req, res) => {
-  const clientSlug    = req.params.client.toLowerCase();
-  const state         = getLiveState(clientSlug);
-  state.isLive        = true;
-  state.updatedAt     = new Date().toISOString();
-  console.log(`[${clientSlug}] LIVE: ON`);
+  const state = getLiveState(req.params.client.toLowerCase());
+  state.isLive = true; state.updatedAt = new Date().toISOString();
   return res.json({ ok: true, ...state });
 });
-
 app.get("/:client/live/off", (req, res) => {
-  const clientSlug    = req.params.client.toLowerCase();
-  const state         = getLiveState(clientSlug);
-  state.isLive        = false;
-  state.updatedAt     = new Date().toISOString();
-  console.log(`[${clientSlug}] LIVE: OFF`);
+  const state = getLiveState(req.params.client.toLowerCase());
+  state.isLive = false; state.updatedAt = new Date().toISOString();
   return res.json({ ok: true, ...state });
 });
-
 app.get("/:client/live-status", (req, res) => {
-  const clientSlug = req.params.client.toLowerCase();
   res.setHeader("Cache-Control", "no-store");
-  return res.json(getLiveState(clientSlug));
+  return res.json(getLiveState(req.params.client.toLowerCase()));
 });
 
 /* ==============================
-   HEALTH / INFO
+   HEALTH
 ============================== */
 app.get("/__whoami", (req, res) => {
   const clients = fs.readdirSync(__dirname).filter(f => {
-    const fullPath = join(__dirname, f);
-    return fs.statSync(fullPath).isDirectory()
-      && !f.startsWith('.')
-      && f !== 'node_modules';
+    const p = join(__dirname, f);
+    return fs.statSync(p).isDirectory() && !f.startsWith('.') && f !== 'node_modules';
   });
-
   res.json({
-    platform:   PLATFORM_NAME,
-    status:     "running",
-    version:    "2026-03-08",
-    clients,
-    routes: {
-      platform:  ["GET /", "GET /app", "GET /reader"],
-      perClient: [
-        "GET  /:client",
-        "GET  /:client/reader",
-        "POST /:client/ministry-message",
-        "GET  /:client/messages",
-        "GET  /:client/live/on",
-        "GET  /:client/live/off",
-        "GET  /:client/live-status",
-      ]
-    },
+    platform: PLATFORM_NAME, status: "running", version: "2026-03-08", clients,
+    notifications: { sms: !!process.env.TWILIO_ACCOUNT_SID, email: !!process.env.RESEND_API_KEY },
     liveStates: LIVE_STATES
   });
 });
 
 /* ==============================
-   START SERVER
+   START
 ============================== */
 app.listen(PORT, () => {
-  console.log(`[${PLATFORM_NAME}] Platform running on port ${PORT}`);
-  console.log(`[${PLATFORM_NAME}] /__whoami to see all active clients`);
+  console.log(`[${PLATFORM_NAME}] Running on port ${PORT}`);
+  console.log(`[${PLATFORM_NAME}] SMS:   ${process.env.TWILIO_ACCOUNT_SID ? "✅" : "⚠️  not configured"}`);
+  console.log(`[${PLATFORM_NAME}] Email: ${process.env.RESEND_API_KEY    ? "✅" : "⚠️  not configured"}`);
+  console.log(`[${PLATFORM_NAME}] Stale message check: every 15 min`);
 });
