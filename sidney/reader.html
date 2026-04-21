@@ -124,10 +124,10 @@
     .reader-header-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
-    #refreshBtn {
+    .hdr-btn {
       background: rgba(255,255,255,0.15);
       border: 1px solid rgba(255,255,255,0.3);
       color: #fff;
@@ -136,30 +136,75 @@
       font-size: 12px;
       cursor: pointer;
       font-weight: 600;
+      transition: background 0.15s;
     }
 
-    #refreshBtn:hover { background: rgba(255,255,255,0.25); }
+    .hdr-btn:hover { background: rgba(255,255,255,0.25); }
+    .hdr-btn.danger { background: rgba(180,30,30,0.5); border-color: rgba(255,100,100,0.4); }
+    .hdr-btn.danger:hover { background: rgba(180,30,30,0.8); }
 
-    #logoutBtn {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.3);
-      color: rgba(255,255,255,0.7);
-      padding: 6px 10px;
+    /* ── BULK ACTION BAR ── */
+    #bulkBar {
+      display: none;
+      background: #1e1010;
+      border-bottom: 1px solid #3a1a1a;
+      padding: 10px 16px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    #bulkBar.visible { display: flex; }
+
+    .bulk-count {
+      font-size: 13px;
+      color: #ff9999;
+      font-weight: 500;
+    }
+
+    .bulk-actions { display: flex; gap: 8px; }
+
+    .bulk-btn {
+      padding: 6px 14px;
       border-radius: 6px;
       font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
     }
 
+    .bulk-btn:hover { opacity: 0.85; }
+    .bulk-btn.cancel  { background: #333; color: #ccc; }
+    .bulk-btn.delete  { background: #841617; color: #fff; }
+
+    /* ── MESSAGE COUNT BAR ── */
     .message-count {
       font-size: 12px;
-      color: rgba(255,255,255,0.6);
+      color: rgba(255,255,255,0.45);
       padding: 8px 16px;
       border-bottom: 1px solid #222;
       background: #141414;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+
+    .select-all-btn {
+      font-size: 11px;
+      color: #888;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: color 0.15s;
+    }
+
+    .select-all-btn:hover { color: #ccc; }
 
     #messageList { padding: 12px; }
 
+    /* ── MESSAGE CARD ── */
     .msg-card {
       background: #1a1a1a;
       border: 1px solid #2a2a2a;
@@ -167,6 +212,8 @@
       padding: 14px 16px;
       margin-bottom: 10px;
       animation: fadeIn 0.3s ease;
+      transition: border-color 0.15s, background 0.15s;
+      position: relative;
     }
 
     @keyframes fadeIn {
@@ -174,7 +221,43 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .msg-card:first-child { border-left: 3px solid #841617; }
+    .msg-card.selected {
+      border-color: #841617;
+      background: #1e1010;
+    }
+
+    .msg-card.first-unread { border-left: 3px solid #841617; }
+
+    .msg-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    /* ── CHECKBOX ── */
+    .msg-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid #444;
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      transition: all 0.15s;
+    }
+
+    .msg-card.selected .msg-checkbox {
+      background: #841617;
+      border-color: #841617;
+      color: #fff;
+    }
+
+    .msg-body { flex: 1; }
 
     .msg-meta {
       display: flex;
@@ -200,12 +283,19 @@
       line-height: 1.6;
     }
 
+    .msg-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
     .msg-source {
       font-size: 10px;
       color: #555;
-      margin-top: 8px;
-      text-align: right;
     }
+
+    .msg-actions { display: flex; gap: 8px; align-items: center; }
 
     .enc-tag {
       display: inline-flex;
@@ -219,7 +309,23 @@
       padding: 2px 6px;
       border-radius: 4px;
       text-transform: uppercase;
-      margin-top: 6px;
+    }
+
+    .delete-btn {
+      background: none;
+      border: 1px solid #3a1a1a;
+      color: #884444;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .delete-btn:hover {
+      background: #841617;
+      color: #fff;
+      border-color: #841617;
     }
 
     .loading {
@@ -259,25 +365,42 @@
     <div class="reader-header">
       <div class="reader-header-title">🚛 Ministry Inbox</div>
       <div class="reader-header-right">
-        <button id="refreshBtn">↻ Refresh</button>
-        <button id="logoutBtn">Lock</button>
+        <button class="hdr-btn" id="refreshBtn">↻ Refresh</button>
+        <button class="hdr-btn danger" id="deleteAllBtn">🗑 All</button>
+        <button class="hdr-btn" id="logoutBtn" style="background:none;border-color:rgba(255,255,255,0.2);">Lock</button>
       </div>
     </div>
-    <div class="message-count" id="messageCount">Loading messages…</div>
+
+    <!-- Bulk action bar (shown when items checked) -->
+    <div id="bulkBar">
+      <span class="bulk-count" id="bulkCount">0 selected</span>
+      <div class="bulk-actions">
+        <button class="bulk-btn cancel" onclick="clearSelection()">Cancel</button>
+        <button class="bulk-btn delete" onclick="deleteSelected()">🗑 Delete Selected</button>
+      </div>
+    </div>
+
+    <div class="message-count" id="messageCount">
+      <span id="countText">Loading messages…</span>
+      <button class="select-all-btn" id="selectAllBtn" onclick="selectAll()" style="display:none;">Select all</button>
+    </div>
+
     <div id="messageList"><div class="loading">Decrypting messages…</div></div>
   </div>
 
   <script>
-    const MESSAGES_URL = 'https://hopepal-production.up.railway.app/sidney/messages';
+    const BASE_URL     = 'https://hopepal-production.up.railway.app';
+    const CLIENT       = 'sidney';
+    const MESSAGES_URL = `${BASE_URL}/${CLIENT}/messages`;
     const AES_KEY_B64  = 'fF/Gx3ZKFqD4KZTAo5wyu55dledR7EMTitZeeF36Pgg=';
 
     let sessionPassword = null;
+    let allMessages     = [];
+    let selectedIds     = new Set();
 
-    /* ── SERVICE WORKER + NOTIFICATIONS ── */
+    /* ── SERVICE WORKER ── */
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('../sw.js').catch(err => {
-        console.warn('SW registration failed:', err);
-      });
+      navigator.serviceWorker.register('../sw.js').catch(() => {});
     }
 
     async function requestNotificationPermission() {
@@ -297,7 +420,7 @@
       }
     }
 
-    /* ── AUTO REFRESH every 60s when logged in ── */
+    /* ── AUTO REFRESH ── */
     let refreshInterval = null;
     let lastMessageId   = null;
 
@@ -311,7 +434,7 @@
             const newest = data.messages[0].id;
             if (lastMessageId && newest !== lastMessageId) {
               showLocalNotification(data.messages[0].name || 'A driver');
-              renderMessages(data.messages);
+              await renderMessages(data.messages);
             }
             lastMessageId = newest;
           }
@@ -331,20 +454,18 @@
 
     async function decryptMessage(b64) {
       try {
-        const combined  = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-        const iv        = combined.slice(0, 12);
-        const ct        = combined.slice(12);
-        const key       = await getKey();
-        const plainBuf  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
-        return new TextDecoder().decode(plainBuf);
+        const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const iv       = combined.slice(0, 12);
+        const ct       = combined.slice(12);
+        const key      = await getKey();
+        const plain    = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+        return new TextDecoder().decode(plain);
       } catch (e) {
         return '[Unable to decrypt]';
       }
     }
 
     function isEncrypted(text) {
-      // Base64 encoded AES-GCM ciphertext will be longer than plain text
-      // and match base64 pattern
       return /^[A-Za-z0-9+/]{40,}={0,2}$/.test(text.trim());
     }
 
@@ -352,19 +473,14 @@
     document.getElementById('loginBtn').addEventListener('click', async () => {
       const pw = document.getElementById('passwordInput').value.trim();
       if (!pw) return;
-
       document.getElementById('loginError').textContent = 'Checking…';
 
       try {
-        const res = await fetch(MESSAGES_URL, {
-          headers: { 'x-reader-password': pw }
-        });
-
+        const res = await fetch(MESSAGES_URL, { headers: { 'x-reader-password': pw } });
         if (res.status === 401) {
           document.getElementById('loginError').textContent = '❌ Incorrect password.';
           return;
         }
-
         if (!res.ok) throw new Error('Server error');
 
         sessionPassword = pw;
@@ -375,7 +491,7 @@
         document.getElementById('loginScreen').style.display  = 'none';
         document.getElementById('readerScreen').style.display = 'block';
 
-        renderMessages(data.messages);
+        await renderMessages(data.messages);
         if (data.messages?.length) lastMessageId = data.messages[0].id;
         startAutoRefresh();
       } catch (err) {
@@ -389,11 +505,17 @@
 
     /* ── RENDER MESSAGES ── */
     async function renderMessages(msgs) {
-      const list  = document.getElementById('messageList');
-      const count = document.getElementById('messageCount');
+      allMessages = msgs || [];
+      selectedIds.clear();
+      updateBulkBar();
 
-      if (!msgs || msgs.length === 0) {
+      const list  = document.getElementById('messageList');
+      const count = document.getElementById('countText');
+      const selBtn = document.getElementById('selectAllBtn');
+
+      if (!allMessages.length) {
         count.textContent = 'No messages yet';
+        selBtn.style.display = 'none';
         list.innerHTML = `
           <div class="empty">
             <div class="empty-icon">📭</div>
@@ -402,41 +524,167 @@
         return;
       }
 
-      count.textContent = `${msgs.length} message${msgs.length !== 1 ? 's' : ''} — newest first`;
+      count.textContent    = `${allMessages.length} message${allMessages.length !== 1 ? 's' : ''} — newest first`;
+      selBtn.style.display = 'inline';
       list.innerHTML = '';
 
-      for (const msg of msgs) {
+      for (let i = 0; i < allMessages.length; i++) {
+        const msg       = allMessages[i];
         const encrypted = isEncrypted(msg.message);
         const text      = encrypted ? await decryptMessage(msg.message) : msg.message;
 
         const date = new Date(msg.created_at).toLocaleString('en-US', {
-          timeZone: 'America/Denver',
+          timeZone: 'America/Chicago',
           month: 'short', day: 'numeric',
           hour: 'numeric', minute: '2-digit'
         });
 
         const card = document.createElement('div');
-        card.className = 'msg-card';
+        card.className = `msg-card${i === 0 ? ' first-unread' : ''}`;
+        card.dataset.id = msg.id;
+
         card.innerHTML = `
-          <div class="msg-meta">
-            <span class="msg-name">🚛 ${escHtml(msg.name || 'Anonymous Driver')}</span>
-            <span class="msg-time">${date}</span>
+          <div class="msg-top">
+            <div class="msg-checkbox" onclick="toggleSelect('${msg.id}', this.closest('.msg-card'))">
+            </div>
+            <div class="msg-body">
+              <div class="msg-meta">
+                <span class="msg-name">🚛 ${escHtml(msg.name || 'Anonymous Driver')}</span>
+                <span class="msg-time">${date}</span>
+              </div>
+              <div class="msg-text">${escHtml(text)}</div>
+              <div class="msg-footer">
+                <div class="msg-actions">
+                  ${encrypted ? '<span class="enc-tag">🔐 Decrypted</span>' : ''}
+                  <span class="msg-source">${escHtml(msg.source || '')}</span>
+                </div>
+                <button class="delete-btn" onclick="deleteOne('${msg.id}', this.closest('.msg-card'))">🗑 Delete</button>
+              </div>
+            </div>
           </div>
-          <div class="msg-text">${escHtml(text)}</div>
-          ${encrypted ? '<div class="enc-tag">🔐 Decrypted</div>' : ''}
-          <div class="msg-source">${escHtml(msg.source || '')}</div>
         `;
+
         list.appendChild(card);
       }
     }
 
-    function escHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    /* ── SELECTION ── */
+    function toggleSelect(id, card) {
+      if (selectedIds.has(id)) {
+        selectedIds.delete(id);
+        card.classList.remove('selected');
+        card.querySelector('.msg-checkbox').textContent = '';
+      } else {
+        selectedIds.add(id);
+        card.classList.add('selected');
+        card.querySelector('.msg-checkbox').textContent = '✓';
+      }
+      updateBulkBar();
     }
+
+    function selectAll() {
+      document.querySelectorAll('.msg-card').forEach(card => {
+        const id = card.dataset.id;
+        selectedIds.add(id);
+        card.classList.add('selected');
+        card.querySelector('.msg-checkbox').textContent = '✓';
+      });
+      updateBulkBar();
+    }
+
+    function clearSelection() {
+      selectedIds.clear();
+      document.querySelectorAll('.msg-card').forEach(card => {
+        card.classList.remove('selected');
+        card.querySelector('.msg-checkbox').textContent = '';
+      });
+      updateBulkBar();
+    }
+
+    function updateBulkBar() {
+      const bar = document.getElementById('bulkBar');
+      const cnt = document.getElementById('bulkCount');
+      if (selectedIds.size > 0) {
+        bar.classList.add('visible');
+        cnt.textContent = `${selectedIds.size} selected`;
+      } else {
+        bar.classList.remove('visible');
+      }
+    }
+
+    /* ── DELETE ONE ── */
+    async function deleteOne(id, card) {
+      if (!confirm('Delete this message?')) return;
+      try {
+        const res = await fetch(`${BASE_URL}/${CLIENT}/messages/${id}`, {
+          method: 'DELETE',
+          headers: { 'x-reader-password': sessionPassword }
+        });
+        if (!res.ok) throw new Error('Delete failed');
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(30px)';
+        card.style.transition = 'all 0.25s ease';
+        setTimeout(() => {
+          card.remove();
+          allMessages = allMessages.filter(m => m.id !== id);
+          document.getElementById('countText').textContent =
+            `${allMessages.length} message${allMessages.length !== 1 ? 's' : ''} — newest first`;
+          if (!allMessages.length) document.getElementById('selectAllBtn').style.display = 'none';
+        }, 250);
+      } catch (err) {
+        alert('Could not delete. Try again.');
+      }
+    }
+
+    /* ── DELETE SELECTED ── */
+    async function deleteSelected() {
+      if (!selectedIds.size) return;
+      if (!confirm(`Delete ${selectedIds.size} message${selectedIds.size !== 1 ? 's' : ''}?`)) return;
+
+      try {
+        const res = await fetch(`${BASE_URL}/${CLIENT}/messages`, {
+          method:  'DELETE',
+          headers: { 'x-reader-password': sessionPassword, 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ ids: [...selectedIds] })
+        });
+        if (!res.ok) throw new Error('Delete failed');
+
+        selectedIds.forEach(id => {
+          const card = document.querySelector(`.msg-card[data-id="${id}"]`);
+          if (card) card.remove();
+        });
+        allMessages = allMessages.filter(m => !selectedIds.has(m.id));
+        selectedIds.clear();
+        updateBulkBar();
+        document.getElementById('countText').textContent =
+          `${allMessages.length} message${allMessages.length !== 1 ? 's' : ''} — newest first`;
+        if (!allMessages.length) document.getElementById('selectAllBtn').style.display = 'none';
+      } catch (err) {
+        alert('Could not delete. Try again.');
+      }
+    }
+
+    /* ── DELETE ALL ── */
+    document.getElementById('deleteAllBtn').addEventListener('click', async () => {
+      if (!allMessages.length) return;
+      if (!confirm(`Delete all ${allMessages.length} messages? This cannot be undone.`)) return;
+
+      const ids = allMessages.map(m => m.id);
+      try {
+        const res = await fetch(`${BASE_URL}/${CLIENT}/messages`, {
+          method:  'DELETE',
+          headers: { 'x-reader-password': sessionPassword, 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ ids })
+        });
+        if (!res.ok) throw new Error('Delete failed');
+        allMessages = [];
+        selectedIds.clear();
+        updateBulkBar();
+        await renderMessages([]);
+      } catch (err) {
+        alert('Could not delete. Try again.');
+      }
+    });
 
     /* ── REFRESH ── */
     document.getElementById('refreshBtn').addEventListener('click', async () => {
@@ -444,7 +692,7 @@
       try {
         const res  = await fetch(MESSAGES_URL, { headers: { 'x-reader-password': sessionPassword } });
         const data = await res.json();
-        renderMessages(data.messages);
+        await renderMessages(data.messages);
       } catch (err) {
         document.getElementById('messageList').innerHTML = '<div class="loading">Could not refresh.</div>';
       }
@@ -454,13 +702,23 @@
     document.getElementById('logoutBtn').addEventListener('click', () => {
       sessionPassword = null;
       lastMessageId   = null;
+      allMessages     = [];
+      selectedIds.clear();
       stopAutoRefresh();
       document.getElementById('readerScreen').style.display = 'none';
       document.getElementById('loginScreen').style.display  = 'flex';
-      document.getElementById('passwordInput').value = '';
-      document.getElementById('loginError').textContent = '';
+      document.getElementById('passwordInput').value        = '';
+      document.getElementById('loginError').textContent     = '';
     });
-  </script>
 
+    /* ── HELPERS ── */
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
 </body>
 </html>
