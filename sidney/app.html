@@ -127,22 +127,34 @@
 
   <script>
     /* ── CONFIG ───────────────────────────────────────── */
-    const BASE_URL        = 'https://hopepal-production.up.railway.app';
+    const BASE_URL        = 'https://otr-ministry-production.up.railway.app';
     const CLIENT          = 'sidney';
     // ⚠️ Update this to your AzuraCast HTTPS URL once SSL cert is installed
-    const LIVE_AUDIO_STREAM = 'https://stream.xsen.fun/listen/hopepalotr/radio.mp3';
+    const LIVE_AUDIO_STREAM = 'https://stream.hopepal.life/listen/hopepal/radio.mp3';
     const DONATE_URL        = 'https://thebotosphere.com';
+
+    /* ── DRIVER TOKEN ─────────────────────────────────── */
+    function getDriverToken() {
+      let token = localStorage.getItem('hopepal_driver_token');
+      if (!token) {
+        token = 'drv_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem('hopepal_driver_token', token);
+      }
+      return token;
+    }
+
+    const DRIVER_TOKEN = getDriverToken();
 
     /* ── AES-256-GCM ENCRYPTION ── */
     const AES_KEY_B64 = 'fF/Gx3ZKFqD4KZTAo5wyu55dledR7EMTitZeeF36Pgg=';
 
-    async function getKey() {
+    async function getKey(mode) {
       const raw = Uint8Array.from(atob(AES_KEY_B64), c => c.charCodeAt(0));
-      return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt']);
+      return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, [mode]);
     }
 
     async function encryptMessage(text) {
-      const key = await getKey();
+      const key = await getKey('encrypt');
       const iv  = crypto.getRandomValues(new Uint8Array(12));
       const enc = new TextEncoder().encode(text);
       const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc);
@@ -150,6 +162,17 @@
       combined.set(iv, 0);
       combined.set(new Uint8Array(ct), iv.byteLength);
       return btoa(String.fromCharCode(...combined));
+    }
+
+    async function decryptMessage(b64) {
+      try {
+        const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const iv       = combined.slice(0, 12);
+        const ct       = combined.slice(12);
+        const key      = await getKey('decrypt');
+        const plain    = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+        return new TextDecoder().decode(plain);
+      } catch (e) { return null; }
     }
 
     /* ── SPEECH SYNTHESIS ─────────────────────────────── */
@@ -338,9 +361,10 @@
           const res = await fetch(`${BASE_URL}/${CLIENT}/ministry-message`, {
             method: 'POST',
             body: new URLSearchParams({
-              name:    name || 'Anonymous Driver',
-              message: encrypted,
-              source:  "Sidney's OTR Ministry"
+              name:         name || 'Anonymous Driver',
+              message:      encrypted,
+              source:       "Sidney's OTR Ministry",
+              driver_token: DRIVER_TOKEN
             })
           });
           if (!res.ok) throw new Error('Send failed');
@@ -350,6 +374,39 @@
           fanMsgStatus.textContent = '❌ Could not send. Please try again.';
         }
       });
+
+      /* ── REPLY POLLING ── */
+      let lastReplyId = localStorage.getItem('hopepal_last_reply') || null;
+
+      async function pollReplies() {
+        try {
+          const res  = await fetch(`${BASE_URL}/${CLIENT}/replies?token=${encodeURIComponent(DRIVER_TOKEN)}`, { cache: 'no-store' });
+          const data = await res.json();
+          if (!data.replies || !data.replies.length) return;
+
+          for (const r of data.replies) {
+            if (r.id === lastReplyId) break;
+            const text = await decryptMessage(r.reply) || r.reply;
+            const div  = document.createElement('div');
+            div.className = 'message bot reply-msg';
+            div.innerHTML = `<span style="font-size:11px;opacity:0.6;display:block;margin-bottom:4px;">💬 ${r.reader_name || 'Ministry'}</span>${escHtml(text)}`;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            speak(`You have a reply from ${r.reader_name || 'the ministry'}`);
+          }
+
+          lastReplyId = data.replies[data.replies.length - 1].id;
+          localStorage.setItem('hopepal_last_reply', lastReplyId);
+        } catch (e) {}
+      }
+
+      function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+
+      // Poll immediately then every 30 seconds
+      pollReplies();
+      setInterval(pollReplies, 30000);
 
       /* ── LIVE AUDIO ── */
       function playAudio() {
@@ -392,3 +449,4 @@
   </script>
 </body>
 </html>
+
