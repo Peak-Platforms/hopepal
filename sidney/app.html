@@ -240,8 +240,8 @@
           <div class="lesson-title">${lesson.title}</div>
           ${lesson.scripture ? `<div class="lesson-scripture">📖 ${lesson.scripture}</div>` : ''}
           <div class="lesson-summary">${lesson.summary}</div>
-          ${lesson.audio_url
-            ? `<audio controls src="${lesson.audio_url}"></audio>
+         ${lesson.audio_url
+         ? `<audio controls src="${lesson.audio_url}?t=${Date.now()}"></audio>`
                ${mins ? `<div class="lesson-duration">⏱ ${mins} min</div>` : ''}`
             : `<div class="lesson-coming">🎙 Audio coming soon — message Sidney for this teaching</div>`
           }
