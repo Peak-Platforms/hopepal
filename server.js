@@ -180,7 +180,43 @@ app.get("/:client/live/on",     (req, res) => { const s = getLiveState(req.param
 app.get("/:client/live/off",    (req, res) => { const s = getLiveState(req.params.client); s.isLive = false; s.updatedAt = new Date().toISOString(); res.json({ ok: true, ...s }); });
 app.get("/:client/live-status", (req, res) => { res.setHeader("Cache-Control","no-store"); res.json(getLiveState(req.params.client)); });
 
-/* ── LESSONS SEARCH ──────────────────────────────────── */
+/* ── DELETE MESSAGE(S) ───────────────────────────────── */
+app.delete("/:client/messages/:id", async (req, res) => {
+  const slug   = req.params.client.toLowerCase();
+  const reader = authenticateReader(slug, req.headers["x-reader-password"]);
+  if (!reader) return res.status(401).json({ error: "Unauthorized" });
+
+  try {
+    const supabase = getSupabase(slug);
+    const { error } = await supabase
+      .from("ministry_messages")
+      .delete()
+      .eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: "Delete failed" });
+    return res.json({ success: true });
+  } catch (err) { return res.status(500).json({ error: err.message }); }
+});
+
+app.delete("/:client/messages", async (req, res) => {
+  const slug   = req.params.client.toLowerCase();
+  const reader = authenticateReader(slug, req.headers["x-reader-password"]);
+  if (!reader) return res.status(401).json({ error: "Unauthorized" });
+
+  const { ids } = req.body || {};
+  if (!ids || !ids.length) return res.status(400).json({ error: "No ids provided" });
+
+  try {
+    const supabase = getSupabase(slug);
+    const { error } = await supabase
+      .from("ministry_messages")
+      .delete()
+      .in("id", ids);
+    if (error) return res.status(500).json({ error: "Delete failed" });
+    return res.json({ success: true, deleted: ids.length });
+  } catch (err) { return res.status(500).json({ error: err.message }); }
+});
+
+/* ── LIVE STATE ──────────────────────────────────────── */
 app.post("/:client/lessons/search", async (req, res) => {
   const slug  = req.params.client.toLowerCase();
   const { query } = req.body || {};
@@ -249,4 +285,5 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`[HopePal] SMS:   ${process.env.TWILIO_ACCOUNT_SID ? "✅" : "⚠️  not configured"}`);
   console.log(`[HopePal] Email: ${process.env.RESEND_API_KEY    ? "✅" : "⚠️  not configured"}`);
 });
+
 
