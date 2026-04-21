@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HopePal — Ministry Operator Guide</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+      --red:     #841617;
+      --red-lt:  #f5e8e8;
+      --cream:   #FDF9D8;
+      --dark:    #1a1007;
+      --mid:     #5a4a3a;
+      --border:  #ddd3c5;
+      --bg:      #f7f3ec;
+      --green:   #1a6b3a;
+      --green-lt:#e6f4ec;
+      --amber:   #b45309;
+      --amber-lt:#fef3c7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      line-height: 1.7;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--dark);
+      padding: 60px 24px 48px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: rgba(253,249,216,0.5);
+      margin-bottom: 16px;
+    }
+
+    .hero-title {
+      font-family: 'Lora', serif;
+      font-size: clamp(28px, 5vw, 42px);
+      color: var(--cream);
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      color: rgba(253,249,216,0.65);
+      max-width: 540px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-steps {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hero-step-pill {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(253,249,216,0.7);
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 999px;
+    }
+
+    /* ── LAYOUT ── */
+    .page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* ── SECTION ── */
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--red);
+      color: var(--cream);
+      font-family: 'Lora', serif;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .section-title {
+      font-family: 'Lora', serif;
+      font-size: 22px;
+      color: var(--dark);
+      line-height: 1.3;
+    }
+
+    .section-sub {
+      font-size: 13px;
+      color: var(--mid);
+      margin-top: 3px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--red);
+      margin-bottom: 12px;
+    }
+
+    /* ── STEPS LIST ── */
+    .steps {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .steps li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 14px;
+      color: var(--dark);
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--red-lt);
+      color: var(--red);
+      font-size: 11px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── NOTE / TIP / WARNING ── */
+    .note {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 14px;
+    }
+
+    .note.tip     { background: var(--green-lt); color: var(--green); }
+    .note.warning { background: var(--amber-lt); color: var(--amber); }
+    .note.info    { background: var(--red-lt);   color: var(--red);   }
+    .note-icon    { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── CODE / URL ── */
+    .url-block {
+      background: #1a1007;
+      color: #fdf9d8;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 10px 0;
+      word-break: break-all;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── TEMPLATE BLOCK ── */
+    .template-block {
+      background: #fdfaf6;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--red);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 12px 0;
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--dark);
+    }
+
+    .template-block .tl {
+      font-weight: 500;
+      color: var(--red);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+      margin-bottom: 3px;
+      margin-top: 10px;
+    }
+
+    .template-block .tl:first-child { margin-top: 0; }
+
+    /* ── PROMPT BOX ── */
+    .prompt-box {
+      background: #1a1a2e;
+      color: #e0e0ff;
+      border-radius: 10px;
+      padding: 20px 24px;
+      font-size: 13px;
+      line-height: 1.8;
+      margin: 12px 0;
+      font-style: italic;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 40px 0;
+    }
+
+    /* ── CHECKLIST ── */
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      padding: 10px 14px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      user-select: none;
+    }
+
+    .check-item:hover { background: var(--red-lt); }
+    .check-item.done  { background: var(--green-lt); border-color: #a7d4b8; }
+    .check-item.done .check-box { background: var(--green); border-color: var(--green); color: #fff; }
+
+    .check-box {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--mid);
+    }
+
+    strong { font-weight: 500; }
+    em { font-style: italic; color: var(--mid); }
+
+    @media (max-width: 600px) {
+      .hero { padding: 40px 20px 36px; }
+      .page { padding: 32px 16px 60px; }
+      .card { padding: 18px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-eyebrow">HopePal — Ministry Operator Guide</div>
+  <h1 class="hero-title">From Raw Doc to Live Lesson<br>in Nine Steps</h1>
+  <p class="hero-sub">Everything you need to take a weekly teaching and put it in front of your drivers — no technical knowledge required.</p>
+  <div class="hero-steps">
+    <span class="hero-step-pill">1. Format your doc</span>
+    <span class="hero-step-pill">2. Generate audio</span>
+    <span class="hero-step-pill">3. Upload to Drive</span>
+    <span class="hero-step-pill">4. Open admin</span>
+    <span class="hero-step-pill">5. Fill in fields</span>
+    <span class="hero-step-pill">6. Paste Drive link</span>
+    <span class="hero-step-pill">7. Preview audio</span>
+    <span class="hero-step-pill">8. Publish</span>
+    <span class="hero-step-pill">9. Test</span>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ── STEP 1 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-circle">1</div>
+      <div>
+        <div class="section-title">Format your doc using the template</div>
+        <div class="section-sub">Takes 10–20 minutes per teaching</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Why this matters</div>
+      The audio quality from NotebookLM depends almost entirely on how well your doc is structured. A plain document produces a generic conversation. A well-structured document produces an engaging, specific podcast your drivers will actually listen to.
+    </div>
+
+    <div class="card">
+      <div class="card-title">The template — copy this structure into every doc</div>
+      <div class="template-block">
+        <span class="tl">WEEK [NUMBER]: [TITLE]</span>
+        <span class="tl">Scripture</span>
+        Book Chapter:Verse — "Full verse text"
+        <span class="tl">The Big Question</span>
+        One sentence framed as a question the whole teaching answers. Make it specific to OTR life.
+        <span class="tl">The Tension</span>
+        A common belief or struggle this teaching pushes back on. One paragraph. Reference driving life.
+        <span class="tl">The Teaching</span>
+        3–5 paragraphs in plain conversational language. Include at least one story and one reference to OTR life.
+        <span class="tl">Key Verse (Repeat)</span>
+        Restate the scripture in one sentence summary.
+        <span class="tl">The Turn</span>
+        The moment the teaching shifts from problem to hope. One paragraph.
+        <span class="tl">Road Application</span>
+        3 practical things a driver can do this week. Write as full sentences, not a list.
+        <span class="tl">Conversation Starters</span>
+        3 questions the podcast hosts can debate. These directly shape the audio quality.
+        <span class="tl">Closing Thought</span>
+        One or two sentences. The thing a driver is still thinking about 200 miles later.
+      </div>
+
+      <div class="note tip">
+        <span class="note-icon">💡</span>
+        <span><strong>Most important sections:</strong> The Tension and Conversation Starters. These two sections determine how engaging the podcast conversation will be. Write them first.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── STEP 2 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-circle">2</div>
+      <div>
+        <div class="section-title">Generate the audio in NotebookLM</div>
+        <div class="section-sub">Free — produces a two-host podcast conversation</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <ul class="steps">
+        <li><span class="step-num">1</span> Go to <strong>notebooklm.google.com</strong> and sign in with your Google account</li>
+        <li><span class="step-num">2</span> Click <strong>New Notebook</strong></li>
+        <li><span class="step-num">3</span> Click <strong>Add Source</strong> → upload your formatted doc</li>
+        <li><span class="step-num">4</span> On the right panel find <strong>Audio Overview</strong> → click <strong>Customize</strong></li>
+        <li><span class="step-num">5</span> Paste the prompt below into the instructions field</li>
+        <li><span class="step-num">6</span> Click <strong>Generate</strong> — takes 2–3 minutes</li>
+        <li><span class="step-num">7</span> When complete, click the <strong>⋮ menu</strong> → <strong>Download</strong> — saves as a .m4a file</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Paste this prompt into the Customize field</div>
+      <div class="prompt-box">
+        Create an Audio Overview as a warm, conversational two-host podcast for long-haul truck drivers. Open with THE BIG QUESTION as the hook. Work through THE TENSION with honest back-and-forth. Use the stories in THE TEACHING as talking points — react naturally. Spend real time on ROAD APPLICATION — make it practical. Close on the CLOSING THOUGHT with sincerity. Tone: warm, honest, occasionally funny, always hopeful. Length: 8 to 12 minutes. Audience: men and women who spend weeks away from family, live in a cab, and are looking for something real — not polished religion.
+      </div>
+    </div>
+
+    <div class="note warning">
+      <span class="note-icon">⚠️</span>
+      <span>Name the downloaded file using this format: <strong>week-01-title.m4a</strong> — this keeps lessons in order when you manage them later.</span>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── STEP 3 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-circle">3</div>
+      <div>
+        <div class="section-title">Upload to Google Drive and get a share link</div>
+        <div class="section-sub">Takes 2 minutes</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <ul class="steps">
+        <li><span class="step-num">1</span> Go to <strong>drive.google.com</strong></li>
+        <li><span class="step-num">2</span> Drag and drop the .m4a file into Drive, or click <strong>New → File upload</strong></li>
+        <li><span class="step-num">3</span> Once uploaded, right-click the file → <strong>Share</strong></li>
+        <li><span class="step-num">4</span> Under "General access" change to <strong>Anyone with the link</strong></li>
+        <li><span class="step-num">5</span> Make sure the role is set to <strong>Viewer</strong></li>
+        <li><span class="step-num">6</span> Click <strong>Copy link</strong> → keep this copied, you'll need it in Step 6</li>
+      </ul>
+
+      <div class="note tip">
+        <span class="note-icon">💡</span>
+        <span>Create a folder in Google Drive called <strong>HopePal Lessons</strong> and keep all your .m4a files there. Easier to find and manage as the library grows.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── STEP 4 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-circle">4</div>
+      <div>
+        <div class="section-title">Open the admin page</div>
+        <div class="section-sub">Your lesson management dashboard</div>
+      </div>
+    </div>
+
+    <div class="card">
+      Open your browser and go to:
+      <div class="url-block">https://hopepal.life/admin</div>
+      You will see a sidebar on the left with all 52 weeks grouped by topic. A green dot next to a week means it is already published and live. A dim dot means it is still a draft.
+      <div class="note info">
+        <span class="note-icon">🔐</span>
+        <span>Keep this URL private — it gives full access to edit and publish lessons.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── STEP 5 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-circle">5</div>
+      <div>
+        <div class="section-title">Select the week and fill in the fields</div>
+        <div class="section-sub">Title, scripture, summary, and keywords</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <ul class="steps">
+        <li><span class="step-num">1</span> Click the week number in the sidebar that matches your teaching</li>
+        <li><span class="step-num">2</span> The editor opens on the right with the current placeholder content</li>
+        <li><span class="step-num">3</span> Replace <strong>Title</strong> with your actual teaching title</li>
+        <li><span class="step-num">4</span> Replace <strong>Scripture</strong> with the primary verse — format: <em>Jeremiah 29:11</em></li>
+        <li><span class="step-num">5</span> Write a <strong>Summary</strong> — 1 to 2 plain sentences describing what the teaching is about</li>
+        <li><span class="step-num">6</span> Add <strong>Keywords</strong> — type each word and press Enter. Think about what a driver would actually say or type when they need this teaching. Examples: <em>lonely, wife, argument, 3am, kids, fired, afraid</em></li>
+        <li><span class="step-num">7</span> Add <strong>Themes</strong> — broader categories like <em>identity, marriage, faith, purpose</em></li>
+      </ul>
+
+      <div class="note tip">
+        <span class="note-icon">💡</span>
+        <span><strong>Keywords are the most important field.</strong> The chatbot matches driver queries against keywords first. The more specific and emotion-based your keywords, the better the match. Think feelings, not theology.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── STEP 6 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-circle">6</div>
+      <div>
+        <div class="section-title">Paste your Google Drive link</div>
+        <div class="section-sub">The admin page converts it automatically</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <ul class="steps">
+        <li><span class="step-num">1</span> Scroll down to the <strong>Audio</strong> section in the editor</li>
+        <li><span class="step-num">2</span> Paste your Google Drive share link into the field</li>
+        <li><span class="step-num">3</span> A green confirmation message appears: <em>"Google Drive link converted"</em></li>
+        <li><span class="step-num">4</span> The converted playback URL appears below it automatically</li>
+        <li><span class="step-num">5</span> Enter the <strong>Duration</strong> in minutes — check the .m4a file length in Google Drive</li>
+      </ul>
+
+      <div class="note warning">
+        <span class="note-icon">⚠️</span>
+        <span>If you see a red error message instead of green, your Drive sharing is not set to "Anyone with the link." Go back to Drive and check the share settings.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── STEP 7 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-circle">7</div>
+      <div>
+        <div class="section-title">Preview the audio</div>
+        <div class="section-sub">Confirm it plays before publishing</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <ul class="steps">
+        <li><span class="step-num">1</span> Click the <strong>Preview</strong> button next to the audio URL field</li>
+        <li><span class="step-num">2</span> An audio player appears below the field</li>
+        <li><span class="step-num">3</span> Click play — the teaching should start from the beginning</li>
+        <li><span class="step-num">4</span> If it plays correctly, you are ready to publish</li>
+      </ul>
+
+      <div class="note warning">
+        <span class="note-icon">⚠️</span>
+        <span>If the audio does not play or tries to download instead, the Google Drive file permissions are not set correctly. Go back to Drive → right-click the file → Share → confirm "Anyone with the link" is selected.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── STEP 8 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-circle">8</div>
+      <div>
+        <div class="section-title">Publish and save</div>
+        <div class="section-sub">Makes the lesson visible to drivers</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <ul class="steps">
+        <li><span class="step-num">1</span> Scroll down to the <strong>Publish</strong> section</li>
+        <li><span class="step-num">2</span> Toggle <strong>Make this lesson live</strong> to ON — the toggle turns green</li>
+        <li><span class="step-num">3</span> Click <strong>Save Changes</strong></li>
+        <li><span class="step-num">4</span> A confirmation appears at the bottom of the screen</li>
+        <li><span class="step-num">5</span> The week in the sidebar now shows a green dot</li>
+      </ul>
+
+      <div class="note tip">
+        <span class="note-icon">💡</span>
+        <span>You can save a lesson with Publish OFF and come back to it later. Drivers will not see it until you turn Publish ON.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── STEP 9 ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-circle">9</div>
+      <div>
+        <div class="section-title">Test it in the app</div>
+        <div class="section-sub">Confirm your drivers can find it</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <ul class="steps">
+        <li><span class="step-num">1</span> Open your ministry app URL in a new tab</li>
+        <li><span class="step-num">2</span> Type or speak a query related to this week's teaching — use a keyword you added, not the title</li>
+        <li><span class="step-num">3</span> The lesson card should appear with the title, scripture, summary, and audio player</li>
+        <li><span class="step-num">4</span> Press play — audio should start from the beginning</li>
+        <li><span class="step-num">5</span> If it works — you are done. Repeat for the next week.</li>
+      </ul>
+
+      <div class="note tip">
+        <span class="note-icon">💡</span>
+        <span><strong>Test with emotional language, not titles.</strong> Type "I feel lonely" not "Week 7". That is how your drivers will actually query the chatbot at 2am.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── WEEKLY CHECKLIST ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-circle">✓</div>
+      <div>
+        <div class="section-title">Weekly checklist</div>
+        <div class="section-sub">Tap each item as you complete it</div>
+      </div>
+    </div>
+
+    <div class="checklist" id="checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>Doc formatted using the template — Big Question, Tension, and Conversation Starters completed</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>Uploaded to NotebookLM with the custom prompt — Audio Overview generated</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>.m4a downloaded and named correctly (week-01-title.m4a)</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>File uploaded to Google Drive — sharing set to Anyone with the link</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>Admin page opened — correct week selected</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>Title, scripture, summary filled in from actual doc</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>Keywords added — emotion words, OTR situations, not just topic names</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>Google Drive link pasted — green confirmation shown</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>Audio previewed — plays from beginning without downloading</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>Publish toggled ON — Save clicked — green dot in sidebar</span>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <span>Tested in app with emotional keyword query — lesson card and audio confirmed working</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── FOOTER ── -->
+<div class="footer">
+  HopePal — Ministry Platform by Peak Platforms &nbsp;·&nbsp; hopepal.life
+</div>
+
+<script>
+  function toggleCheck(el) {
+    el.classList.toggle('done');
+    const box = el.querySelector('.check-box');
+    box.textContent = el.classList.contains('done') ? '✓' : '';
+  }
+</script>
+
+</body>
+</html>
