@@ -130,7 +130,6 @@ app.post("/:client/upload", express.raw({ type: '*/*', limit: '200mb' }), async 
       Key:         key,
       Body:        req.body,
       ContentType: contentType,
-      ACL:         "public-read",
     }));
 
     const url = `https://${bucket}.${region}.cdn.digitaloceanspaces.com/${key}`;
