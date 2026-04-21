@@ -1,15 +1,17 @@
-const CACHE_NAME = 'hopepal-v2';
-const OFFLINE_FILES = ['/sidney/reader.html', '/manifest.json'];
+const CACHE_NAME = 'hopepal-v3';
 
-/* ── INSTALL: cache core files ── */
+// Only cache non-HTML static assets
+const STATIC_FILES = ['/manifest.json'];
+
+/* ── INSTALL ── */
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(OFFLINE_FILES))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_FILES))
   );
   self.skipWaiting();
 });
 
-/* ── ACTIVATE: clean old caches ── */
+/* ── ACTIVATE: clear all old caches ── */
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -19,14 +21,31 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-/* ── FETCH: serve from cache if offline ── */
+/* ── FETCH ── */
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // NEVER cache HTML files — always fetch fresh from network
+  if (event.request.destination === 'document' ||
+      url.pathname.endsWith('.html') ||
+      url.pathname === '/' ||
+      url.pathname.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request).catch(() =>
+        new Response('<h2>You are offline</h2><p>Please reconnect to use HopePal.</p>',
+          { headers: { 'Content-Type': 'text/html' } })
+      )
+    );
+    return;
+  }
+
+  // For everything else — network first, cache fallback
   event.respondWith(
     fetch(event.request).catch(() => caches.match(event.request))
   );
 });
 
-/* ── PUSH: show notification when new message arrives ── */
+/* ── PUSH NOTIFICATIONS ── */
 self.addEventListener('push', event => {
   const data    = event.data?.json() || {};
   const title   = data.title || 'HopePal — New Message';
@@ -43,7 +62,7 @@ self.addEventListener('push', event => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-/* ── NOTIFICATION CLICK: open reader ── */
+/* ── NOTIFICATION CLICK ── */
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(
@@ -57,3 +76,4 @@ self.addEventListener('notificationclick', event => {
     })
   );
 });
+
