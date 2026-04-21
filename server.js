@@ -107,14 +107,14 @@ app.get("/:client/reader", (req, res, next) => {
 /* ── SEND MESSAGE ────────────────────────────────────── */
 app.post("/:client/ministry-message", async (req, res) => {
   const slug = req.params.client.toLowerCase();
-  const { name, message, source } = req.body || {};
+  const { name, message, source, driver_token } = req.body || {};
   if (!message?.trim()) return res.status(400).json({ error: "Message required" });
 
   try {
     const supabase = getSupabase(slug);
     const { error } = await supabase
       .from("ministry_messages")
-      .insert([{ name: name?.trim() || "Anonymous", message: message.trim(), source: source || `${slug} chat`, status: "unread" }]);
+      .insert([{ name: name?.trim() || "Anonymous", message: message.trim(), source: source || `${slug} chat`, status: "unread", driver_token: driver_token || null }]);
 
     if (error) { console.error(`[${slug}] Insert error:`, error.message); return res.status(500).json({ error: "Failed to save" }); }
 
@@ -135,7 +135,7 @@ app.get("/:client/messages", async (req, res) => {
     const supabase = getSupabase(slug);
     const { data, error } = await supabase
       .from("ministry_messages")
-      .select("id, name, message, source, status, claimed_by, claimed_at, resolved_by, resolved_at, created_at")
+      .select("id, name, message, source, status, claimed_by, claimed_at, resolved_by, resolved_at, driver_token, created_at")
       .order("created_at", { ascending: false })
       .limit(100);
 
@@ -216,6 +216,56 @@ app.delete("/:client/messages", async (req, res) => {
   } catch (err) { return res.status(500).json({ error: err.message }); }
 });
 
+/* ── SEND REPLY (reader → driver) ────────────────────── */
+app.post("/:client/replies", async (req, res) => {
+  const slug   = req.params.client.toLowerCase();
+  const reader = authenticateReader(slug, req.headers["x-reader-password"]);
+  if (!reader) return res.status(401).json({ error: "Unauthorized" });
+
+  const { driver_token, reply } = req.body || {};
+  if (!driver_token?.trim()) return res.status(400).json({ error: "driver_token required" });
+  if (!reply?.trim())        return res.status(400).json({ error: "reply required" });
+
+  try {
+    const supabase = getSupabase(slug);
+    const { error } = await supabase
+      .from("ministry_replies")
+      .insert([{ driver_token, reply, reader_name: reader.name }]);
+    if (error) throw error;
+    console.log(`[${slug}] Reply sent to token ${driver_token.slice(0,8)}… by ${reader.name}`);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(`[${slug}] Reply error:`, err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/* ── GET REPLIES (driver polls) ──────────────────────── */
+app.get("/:client/replies", async (req, res) => {
+  const slug  = req.params.client.toLowerCase();
+  const token = req.query.token;
+  if (!token) return res.status(400).json({ error: "token required" });
+
+  try {
+    const supabase = getSupabase(slug);
+    const { data, error } = await supabase
+      .from("ministry_replies")
+      .select("id, reply, reader_name, read, created_at")
+      .eq("driver_token", token)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+
+    const unread = (data || []).filter(r => !r.read).map(r => r.id);
+    if (unread.length) {
+      supabase.from("ministry_replies").update({ read: true }).in("id", unread).then(() => {});
+    }
+
+    return res.json({ replies: data || [] });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 /* ── LIVE STATE ──────────────────────────────────────── */
 app.post("/:client/lessons/search", async (req, res) => {
   const slug  = req.params.client.toLowerCase();
@@ -285,6 +335,7 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`[HopePal] SMS:   ${process.env.TWILIO_ACCOUNT_SID ? "✅" : "⚠️  not configured"}`);
   console.log(`[HopePal] Email: ${process.env.RESEND_API_KEY    ? "✅" : "⚠️  not configured"}`);
 });
+
 
 
 
