@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const app  = express();
 const PORT = process.env.PORT || 8080;
@@ -85,12 +86,72 @@ async function notifyReaders(clientSlug, senderName, readerUrl) {
   }
 }
 
+/* ── DIGITAL OCEAN SPACES ────────────────────────────── */
+const s3 = new S3Client({
+  endpoint: `https://${process.env.DO_SPACES_REGION}.digitaloceanspaces.com`,
+  region:   process.env.DO_SPACES_REGION || "nyc3",
+  credentials: {
+    accessKeyId:     process.env.DO_SPACES_KEY,
+    secretAccessKey: process.env.DO_SPACES_SECRET,
+  },
+});
+
+/* ── UPLOAD AUTH ─────────────────────────────────────── */
+app.post("/:client/upload-auth", (req, res) => {
+  const slug = req.params.client.toLowerCase();
+  const { password } = req.body || {};
+  const expected = process.env[`${slug.toUpperCase()}_UPLOAD_PASSWORD`];
+  if (!expected || password !== expected) {
+    return res.status(401).json({ error: "Invalid password" });
+  }
+  return res.json({ success: true, client: slug });
+});
+
+/* ── UPLOAD FILE TO SPACES ───────────────────────────── */
+app.post("/:client/upload", express.raw({ type: '*/*', limit: '200mb' }), async (req, res) => {
+  const slug = req.params.client.toLowerCase();
+
+  // Verify password from header
+  const password = req.headers["x-upload-password"];
+  const expected = process.env[`${slug.toUpperCase()}_UPLOAD_PASSWORD`];
+  if (!expected || password !== expected) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const filename    = req.headers["x-filename"] || `upload-${Date.now()}.m4a`;
+  const contentType = req.headers["content-type"] || "audio/mp4";
+  const bucket      = process.env.DO_SPACES_BUCKET || "hopepal";
+  const region      = process.env.DO_SPACES_REGION || "nyc3";
+  const key         = `${slug}/${filename}`;
+
+  try {
+    await s3.send(new PutObjectCommand({
+      Bucket:      bucket,
+      Key:         key,
+      Body:        req.body,
+      ContentType: contentType,
+      ACL:         "public-read",
+    }));
+
+    const url = `https://${bucket}.${region}.cdn.digitaloceanspaces.com/${key}`;
+    console.log(`[${slug}] Uploaded: ${key}`);
+    return res.json({ success: true, url, filename, key });
+  } catch (err) {
+    console.error(`[${slug}] Upload error:`, err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 /* ── STATIC FILES ────────────────────────────────────── */
 app.use(express.static(__dirname, { index: false }));
 
 app.get("/",       (req, res) => res.sendFile(join(__dirname, "index.html")));
 app.get("/app",    (req, res) => res.sendFile(join(__dirname, "app.html")));
 app.get("/reader", (req, res) => res.sendFile(join(__dirname, "reader.html")));
+
+app.get("/upload/:client", (req, res) => {
+  res.sendFile(join(__dirname, "upload.html"));
+});
 
 app.get("/:client", (req, res, next) => {
   const file = join(__dirname, req.params.client.toLowerCase(), "app.html");
