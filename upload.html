@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HopePal — Upload Teaching Audio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+      --red:    #841617;
+      --red-lt: #f5e8e8;
+      --cream:  #FDF9D8;
+      --dark:   #1a1007;
+      --mid:    #5a4a3a;
+      --border: #ddd3c5;
+      --bg:     #f7f3ec;
+      --green:  #1a6b3a;
+      --green-lt: #e6f4ec;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header-eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--mid);
+      margin-bottom: 8px;
+    }
+
+    .header-title {
+      font-family: 'Lora', serif;
+      font-size: 22px;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .header-sub {
+      font-size: 13px;
+      color: var(--mid);
+    }
+
+    /* ── LOGIN ── */
+    #loginSection { }
+
+    .field { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--mid);
+      margin-bottom: 6px;
+    }
+
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fdfaf6;
+      color: var(--dark);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(132,22,23,0.08); }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--red);
+      color: var(--cream);
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 8px;
+    }
+
+    .btn:hover { opacity: 0.88; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .error-msg {
+      font-size: 13px;
+      color: var(--red);
+      margin-top: 8px;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    /* ── UPLOAD SECTION ── */
+    #uploadSection { display: none; }
+
+    /* ── DROP ZONE ── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fdfaf6;
+      margin-bottom: 20px;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--red);
+      background: var(--red-lt);
+    }
+
+    .drop-icon { font-size: 40px; margin-bottom: 12px; }
+
+    .drop-title {
+      font-family: 'Lora', serif;
+      font-size: 16px;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .drop-sub {
+      font-size: 12px;
+      color: var(--mid);
+    }
+
+    .drop-sub strong { color: var(--red); }
+
+    #fileInput { display: none; }
+
+    /* ── FILE SELECTED ── */
+    .file-selected {
+      display: none;
+      background: var(--red-lt);
+      border: 1px solid #e8c0c0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+
+    .file-name {
+      font-weight: 500;
+      color: var(--red);
+      word-break: break-all;
+    }
+
+    .file-size { color: var(--mid); font-size: 12px; margin-top: 2px; }
+
+    /* ── PROGRESS ── */
+    .progress-wrap {
+      display: none;
+      margin-bottom: 16px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--mid);
+      margin-bottom: 6px;
+    }
+
+    .progress-bar-bg {
+      background: #e8e0d8;
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      background: var(--red);
+      height: 100%;
+      border-radius: 999px;
+      width: 0%;
+      transition: width 0.2s;
+    }
+
+    /* ── SUCCESS ── */
+    #successSection {
+      display: none;
+      text-align: center;
+    }
+
+    .success-icon { font-size: 48px; margin-bottom: 16px; }
+
+    .success-title {
+      font-family: 'Lora', serif;
+      font-size: 20px;
+      color: var(--green);
+      margin-bottom: 8px;
+    }
+
+    .success-sub {
+      font-size: 13px;
+      color: var(--mid);
+      margin-bottom: 20px;
+    }
+
+    .url-box {
+      background: #1a1007;
+      color: #fdf9d8;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      word-break: break-all;
+      text-align: left;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    .copy-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-bottom: 12px;
+    }
+
+    .copy-btn:hover { opacity: 0.88; }
+
+    .next-step {
+      font-size: 12px;
+      color: var(--mid);
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 10px 14px;
+      line-height: 1.6;
+      text-align: left;
+      margin-bottom: 16px;
+    }
+
+    .upload-another {
+      font-size: 13px;
+      color: var(--red);
+      cursor: pointer;
+      background: none;
+      border: none;
+      text-decoration: underline;
+      font-family: inherit;
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 0; align-items: flex-start; }
+      .card { border-radius: 0; border: none; min-height: 100vh; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-eyebrow">HopePal — Ministry Tools</div>
+    <div class="header-title" id="pageTitle">Upload Teaching Audio</div>
+    <div class="header-sub" id="pageSub">Loading…</div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="loginSection">
+    <div class="field">
+      <label>Upload Password</label>
+      <input type="password" id="pwInput" placeholder="Enter your upload password" />
+    </div>
+    <button class="btn" id="loginBtn">Continue</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div id="uploadSection">
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">🎙</div>
+      <div class="drop-title">Drop your .m4a file here</div>
+      <div class="drop-sub">or <strong>click to browse</strong></div>
+    </div>
+    <input type="file" id="fileInput" accept=".m4a,audio/mp4,audio/x-m4a" />
+
+    <div class="file-selected" id="fileSelected">
+      <div class="file-name" id="fileName"></div>
+      <div class="file-size" id="fileSize"></div>
+    </div>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-label">
+        <span>Uploading…</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <button class="btn" id="uploadBtn" disabled>Upload File</button>
+    <div class="error-msg" id="uploadError"></div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="successSection">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Upload Complete</div>
+    <div class="success-sub" id="successFile"></div>
+    <div class="url-box" id="audioUrl"></div>
+    <button class="copy-btn" id="copyBtn">Copy Audio URL</button>
+    <div class="next-step">
+      <strong>Next:</strong> Open the <a href="/admin" style="color:var(--red)">admin page</a> → select the week → paste this URL into the Audio field → click Save.
+    </div>
+    <button class="upload-another" onclick="resetUpload()">Upload another file</button>
+  </div>
+
+</div>
+
+<script>
+  const BASE_URL = window.location.origin.includes('localhost')
+    ? 'http://localhost:8080'
+    : 'https://hopepal-production.up.railway.app';
+
+  // Read client slug from URL: /upload/sidney → "sidney"
+  const CLIENT = window.location.pathname.split('/').filter(Boolean)[1] || '';
+
+  let uploadPassword = null;
+  let selectedFile   = null;
+
+  // Set page title based on client
+  const clientNames = {
+    sidney: "Sidney's OTR Driver Ministry",
+  };
+  document.getElementById('pageSub').textContent =
+    clientNames[CLIENT] || (CLIENT ? CLIENT.charAt(0).toUpperCase() + CLIENT.slice(1) : 'Unknown client');
+
+  if (!CLIENT) {
+    document.getElementById('loginSection').innerHTML =
+      '<div style="text-align:center;color:#841617;font-size:14px;">No client specified in URL.<br>Go to /upload/your-client-name</div>';
+  }
+
+  /* ── LOGIN ── */
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const pw = document.getElementById('pwInput').value.trim();
+    if (!pw) return;
+
+    document.getElementById('loginBtn').disabled = true;
+    document.getElementById('loginBtn').textContent = 'Checking…';
+
+    try {
+      const res  = await fetch(`${BASE_URL}/${CLIENT}/upload-auth`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ password: pw })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        document.getElementById('loginError').textContent = '❌ Incorrect password.';
+        document.getElementById('loginBtn').disabled = false;
+        document.getElementById('loginBtn').textContent = 'Continue';
+        return;
+      }
+
+      uploadPassword = pw;
+      document.getElementById('loginSection').style.display  = 'none';
+      document.getElementById('uploadSection').style.display = 'block';
+    } catch (err) {
+      document.getElementById('loginError').textContent = '❌ Could not connect. Try again.';
+      document.getElementById('loginBtn').disabled = false;
+      document.getElementById('loginBtn').textContent = 'Continue';
+    }
+  });
+
+  document.getElementById('pwInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+  });
+
+  /* ── DROP ZONE ── */
+  const dropZone  = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('click', () => fileInput.click());
+
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) setFile(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) setFile(fileInput.files[0]);
+  });
+
+  function setFile(file) {
+    selectedFile = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatSize(file.size);
+    document.getElementById('fileSelected').style.display = 'block';
+    document.getElementById('uploadBtn').disabled = false;
+    document.getElementById('uploadError').textContent = '';
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  /* ── UPLOAD ── */
+  document.getElementById('uploadBtn').addEventListener('click', async () => {
+    if (!selectedFile || !uploadPassword) return;
+
+    document.getElementById('uploadBtn').disabled   = true;
+    document.getElementById('uploadBtn').textContent = 'Uploading…';
+    document.getElementById('progressWrap').style.display = 'block';
+    document.getElementById('uploadError').textContent = '';
+
+    try {
+      // Use XMLHttpRequest for progress tracking
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', e => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressPct').textContent  = pct + '%';
+          }
+        });
+
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              if (data.url) {
+                showSuccess(selectedFile.name, data.url);
+                resolve();
+              } else {
+                reject(new Error(data.error || 'Upload failed'));
+              }
+            } catch (e) {
+              reject(new Error('Invalid server response'));
+            }
+          } else {
+            try {
+              const err = JSON.parse(xhr.responseText);
+              reject(new Error(err.error || `Server error ${xhr.status}`));
+            } catch {
+              reject(new Error(`Server error ${xhr.status}`));
+            }
+          }
+        });
+
+        xhr.addEventListener('error', () => reject(new Error('Network error')));
+
+        xhr.open('POST', `${BASE_URL}/${CLIENT}/upload`);
+        xhr.setRequestHeader('x-upload-password', uploadPassword);
+        xhr.setRequestHeader('x-filename', selectedFile.name);
+        xhr.setRequestHeader('Content-Type', selectedFile.type || 'audio/mp4');
+        xhr.send(selectedFile);
+      });
+
+    } catch (err) {
+      document.getElementById('uploadError').textContent    = '❌ ' + err.message;
+      document.getElementById('uploadBtn').disabled         = false;
+      document.getElementById('uploadBtn').textContent      = 'Upload File';
+      document.getElementById('progressWrap').style.display = 'none';
+    }
+  });
+
+  function showSuccess(filename, url) {
+    document.getElementById('uploadSection').style.display  = 'none';
+    document.getElementById('successSection').style.display = 'block';
+    document.getElementById('successFile').textContent      = filename;
+    document.getElementById('audioUrl').textContent         = url;
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(url).then(() => {
+        document.getElementById('copyBtn').textContent = '✓ Copied!';
+        setTimeout(() => {
+          document.getElementById('copyBtn').textContent = 'Copy Audio URL';
+        }, 2000);
+      });
+    });
+  }
+
+  function resetUpload() {
+    selectedFile = null;
+    document.getElementById('successSection').style.display = 'none';
+    document.getElementById('uploadSection').style.display  = 'block';
+    document.getElementById('fileSelected').style.display   = 'none';
+    document.getElementById('progressWrap').style.display   = 'none';
+    document.getElementById('progressFill').style.width     = '0%';
+    document.getElementById('progressPct').textContent      = '0%';
+    document.getElementById('uploadBtn').disabled           = true;
+    document.getElementById('uploadBtn').textContent        = 'Upload File';
+    document.getElementById('fileName').textContent         = '';
+    document.getElementById('fileSize').textContent         = '';
+    document.getElementById('audioUrl').textContent         = '';
+  }
+</script>
+</body>
+</html>
