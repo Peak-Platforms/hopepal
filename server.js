@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 /* ── CORS + PARSERS ─────────────────────────────────── */
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-reader-password");
   res.setHeader("Cache-Control", "no-store");
   if (req.method === "OPTIONS") return res.sendStatus(204);
@@ -285,5 +285,6 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`[HopePal] SMS:   ${process.env.TWILIO_ACCOUNT_SID ? "✅" : "⚠️  not configured"}`);
   console.log(`[HopePal] Email: ${process.env.RESEND_API_KEY    ? "✅" : "⚠️  not configured"}`);
 });
+
 
 
