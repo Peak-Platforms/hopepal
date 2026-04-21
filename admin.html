@@ -541,19 +541,10 @@
         <div class="card-title">Audio</div>
 
         <div class="field">
-          <label>Google Drive Share Link</label>
+          <label>Audio URL</label>
           <div class="audio-row">
-            <input type="text" id="driveInput" placeholder="Paste Google Drive share link here…" oninput="handleDriveInput(this.value)" />
+            <input type="text" id="edAudioUrl" placeholder="https://hopepal.nyc3.cdn.digitaloceanspaces.com/sidney/week-01.m4a" />
             <button class="btn btn-ghost" onclick="previewAudio()">Preview</button>
-          </div>
-
-          <!-- Conversion status -->
-          <div id="driveStatus" style="display:none;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
-
-          <!-- Converted URL (readonly) -->
-          <div id="driveConverted" style="display:none;margin-top:8px;">
-            <label style="margin-bottom:4px;">Converted playback URL</label>
-            <input type="text" id="edAudioUrl" readonly style="background:#f0f0f0;font-size:12px;color:#555;" />
           </div>
 
           <div class="audio-preview" id="audioPreview">
@@ -561,7 +552,7 @@
           </div>
 
           <div class="field-hint" style="margin-top:8px;">
-            In Google Drive: right-click the .m4a file → Share → Anyone with the link → Copy link. Paste it above — the playback URL is generated automatically.
+            Upload your .m4a file at <strong>hopepal.life/upload/sidney</strong> → copy the URL → paste it here.
           </div>
         </div>
 
@@ -676,7 +667,7 @@
   /* ── CONFIG ── */
   const SUPABASE_URL = 'https://ggvtxauxjkixszvyirsl.supabase.co';
   // ⚠️ Replace with your anon key from Supabase → Settings → API
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdndnR4YXV4amtpeHN6dnlpcnNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NDYyMDcsImV4cCI6MjA4ODIyMjIwN30.XEzPwh7-BYc7FnfU21AvXExQjhd-6UwJ4G8og3dYqaY';
+  const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
   const headers = {
     'apikey':        SUPABASE_KEY,
@@ -771,19 +762,8 @@
       ? Math.round(lesson.duration_seconds / 60) : '';
     document.getElementById('edPublished').checked     = !!lesson.published;
 
-    // Populate drive input and show converted URL if audio exists
-    const driveInput    = document.getElementById('driveInput');
-    const driveConverted = document.getElementById('driveConverted');
-    const driveStatus   = document.getElementById('driveStatus');
-    if (lesson.audio_url) {
-      driveInput.value          = lesson.audio_url;
-      driveConverted.style.display = 'block';
-      driveStatus.style.display = 'none';
-    } else {
-      driveInput.value             = '';
-      driveConverted.style.display = 'none';
-      driveStatus.style.display    = 'none';
-    }
+    // Reset audio preview
+    document.getElementById('audioPreview').style.display = 'none';
 
     // Reset audio preview
     document.getElementById('audioPreview').style.display = 'none';
@@ -962,5 +942,6 @@
 </script>
 </body>
 </html>
+
 
 
