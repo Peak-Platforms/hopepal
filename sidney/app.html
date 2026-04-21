@@ -127,10 +127,10 @@
 
   <script>
     /* ── CONFIG ───────────────────────────────────────── */
-    const BASE_URL        = 'https://hopepal-production.up.railway.app';
+    const BASE_URL        = 'https://otr-ministry-production.up.railway.app';
     const CLIENT          = 'sidney';
     // ⚠️ Update this to your AzuraCast HTTPS URL once SSL cert is installed
-    const LIVE_AUDIO_STREAM = 'https://stream.xsen.fun/listen/hopepalotr/radio.mp3';
+    const LIVE_AUDIO_STREAM = 'https://stream.hopepal.life/listen/hopepal/radio.mp3';
     const DONATE_URL        = 'https://thebotosphere.com';
 
     /* ── DRIVER TOKEN ─────────────────────────────────── */
@@ -240,11 +240,11 @@
           <div class="lesson-title">${lesson.title}</div>
           ${lesson.scripture ? `<div class="lesson-scripture">📖 ${lesson.scripture}</div>` : ''}
           <div class="lesson-summary">${lesson.summary}</div>
-        ${lesson.audio_url
-  ? `<audio controls src="${lesson.audio_url}?t=${Date.now()}"></audio>
-     ${mins ? `<div class="lesson-duration">⏱ ${mins} min</div>` : ''}`
-  : `<div class="lesson-coming">🎙 Audio coming soon — message Sidney for this teaching</div>`
-}
+          ${lesson.audio_url
+            ? `<iframe src="${lesson.audio_url}" style="width:100%;height:80px;border:none;border-radius:8px;margin-top:8px;" allow="autoplay"></iframe>
+               ${mins ? `<div class="lesson-duration">⏱ ${mins} min</div>` : ''}`
+            : `<div class="lesson-coming">🎙 Audio coming soon — message Sidney for this teaching</div>`
+          }
         `;
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
@@ -449,4 +449,5 @@
   </script>
 </body>
 </html>
+
 
