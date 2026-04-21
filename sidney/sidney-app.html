@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PrayerPal — Sidney's OTR Driver Ministry</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f0f0; color: #222; }
+    a { text-decoration: none; }
+    .chat-container { width: 100%; max-width: 480px; margin: 16px auto; border: 1px solid #111; border-radius: 10px; background: #fff; display: flex; flex-direction: column; min-height: calc(100vh - 32px); }
+    .chat-header { display: flex; align-items: center; gap: 10px; background: #841617; color: #FDF9D8; padding: 12px 14px; font-weight: 600; border-radius: 10px 10px 0 0; }
+    .header-title { font-size: 16px; font-weight: 700; white-space: nowrap; color: #FDF9D8; }
+    .live-badge { margin-left: auto; font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 999px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.4); transition: all 0.25s ease; }
+    .live-badge.live { background: #ff2d2d; color: #fff; box-shadow: 0 0 8px rgba(255,45,45,0.8); }
+    .live-badge.offline { background: #666; color: #eee; }
+    .live-cta { display: flex; justify-content: center; gap: 12px; margin: 12px; }
+    .live-cta button { flex: 1; padding: 10px 14px; font-size: 14px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+    .live-cta button:hover { opacity: 0.85; }
+    #listenLiveBtn { background: #841617; color: #FDF9D8; }
+    #donateBtn { background: #ffd54f; color: #111; }
+    #xsen-audio-card { margin: 0 12px 12px; background: #1a1a1a; border-radius: 10px; padding: 12px; }
+    .xsen-audio-header { color: #ff2d2d; font-weight: 700; font-size: 13px; margin-bottom: 8px; }
+    #xsenAudio { width: 100%; height: 36px; }
+    .xsen-audio-status { color: #aaa; font-size: 12px; margin-top: 6px; text-align: center; }
+    .fan-message-panel { margin: 0 12px 12px; padding: 16px; background: #fff; border-radius: 14px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+    .fan-message-header { display: flex; justify-content: center; align-items: center; gap: 6px; font-weight: 800; font-size: 15px; color: #841617; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #f0e0e0; }
+    .fan-message-panel input, .fan-message-panel textarea { width: 100%; margin: 8px 0; padding: 9px 11px; font-size: 14px; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; }
+    .fan-message-panel input:focus, .fan-message-panel textarea:focus { outline: none; border-color: #841617; }
+    #sendFanMessage { width: 100%; margin-top: 10px; padding: 11px; background: #841617; color: #FDF9D8; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+    #sendFanMessage:hover { opacity: 0.9; }
+    .encryption-banner { display: flex; align-items: center; justify-content: center; gap: 6px; background: #1a1a2e; color: #00e676; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 6px 12px; border-radius: 6px; margin-bottom: 12px; text-transform: uppercase; }
+    .encryption-banner span.lock-icon { font-size: 13px; }
+    .fan-message-status { text-align: center; font-size: 13px; margin-top: 8px; min-height: 16px; color: #666; }
+    .chat-messages { flex: 1; padding: 16px; overflow-y: auto; background: #fdfdfd; min-height: 300px; }
+    .message { margin-bottom: 12px; padding: 10px 14px; border-radius: 10px; max-width: 85%; line-height: 1.5; font-size: 14px; }
+    .message.bot { background: #f0f0f0; color: #222; }
+    .message.user { background: #841617; color: #FDF9D8; margin-left: auto; }
+
+    /* ── LESSON CARD ── */
+    .lesson-card { background: #fff; border: 1px solid #ddd; border-left: 4px solid #841617; border-radius: 10px; max-width: 92%; padding: 14px; }
+    .lesson-week { font-size: 11px; font-weight: 700; color: #841617; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .lesson-title { font-size: 16px; font-weight: 700; color: #222; margin-bottom: 4px; }
+    .lesson-scripture { font-size: 12px; color: #666; margin-bottom: 8px; font-style: italic; }
+    .lesson-summary { font-size: 13px; color: #444; line-height: 1.5; margin-bottom: 10px; }
+    .lesson-card audio { width: 100%; margin-top: 4px; }
+    .lesson-duration { font-size: 11px; color: #888; margin-top: 4px; text-align: right; }
+    .lesson-coming { font-size: 12px; color: #999; margin-top: 8px; text-align: center; font-style: italic; }
+
+    /* ── LESSON CHOICES ── */
+    .lesson-choices { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .lesson-choice-btn { background: #f5f5f5; border: 1px solid #ccc; border-radius: 8px; padding: 8px 12px; font-size: 13px; cursor: pointer; text-align: left; transition: background 0.15s; }
+    .lesson-choice-btn:hover { background: #f0e0e0; border-color: #841617; }
+
+    /* ── CHAT INPUT ── */
+    .chat-input { display: flex; border-top: 1px solid #ddd; background: #fff; border-radius: 0 0 10px 10px; align-items: center; }
+    .chat-input input { flex: 1; padding: 14px; border: none; font-size: 1rem; font-family: inherit; background: transparent; }
+    .chat-input input:focus { outline: none; }
+    #micBtn { background: none; border: none; font-size: 1.3rem; padding: 0 10px; cursor: pointer; transition: transform 0.15s; color: #841617; }
+    #micBtn.listening { animation: pulse 0.8s infinite alternate; color: #ff2d2d; }
+    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.25); } }
+    .chat-input button[type="submit"] { background: #841617; color: #FDF9D8; border: none; padding: 0 20px; font-size: 1.2rem; cursor: pointer; border-radius: 0 0 10px 0; transition: opacity 0.2s; height: 100%; min-height: 50px; }
+    .chat-input button[type="submit"]:hover { opacity: 0.9; }
+
+    .nav-bar { display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid #eee; background: #fafafa; border-radius: 0 0 10px 10px; }
+    .nav-bar a { font-size: 12px; color: #841617; opacity: 0.7; transition: opacity 0.2s; }
+    .nav-bar a:hover { opacity: 1; }
+    @media (max-width: 520px) {
+      .chat-container { margin: 0; border-radius: 0; border: none; min-height: 100vh; }
+      .chat-header { border-radius: 0; }
+      .chat-input button[type="submit"] { border-radius: 0; }
+      .nav-bar { border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <header class="chat-header">
+      <span class="header-title">🚛 Sidney's OTR Driver Ministry</span>
+      <span id="liveBadge" class="live-badge offline">⚪ OFFLINE</span>
+    </header>
+
+    <div class="live-cta">
+      <button id="listenLiveBtn" type="button">🔴 Listen</button>
+      <button id="donateBtn" type="button">❤️ Support the Ministry</button>
+    </div>
+
+    <div id="xsen-audio-card" style="display:none;">
+      <div class="xsen-audio-header">🔴 OTR BROADCAST</div>
+      <audio id="xsenAudio" preload="none" playsinline controls>
+        <source src="" type="audio/mpeg" />
+        Your browser does not support audio.
+      </audio>
+      <div id="audioStatus" class="xsen-audio-status">Tap ▶ to listen live</div>
+    </div>
+
+    <div class="fan-message-panel">
+      <div class="fan-message-header">📡 Message the Ministry — 24/7</div>
+      <div class="encryption-banner">
+        <span class="lock-icon">🔐</span>
+        <span>AES-256 Encrypted — Not Stored — Direct to Sidney</span>
+      </div>
+      <p style="font-size:12px; color:#666; text-align:center; margin-bottom:10px;">Prayer request, encouragement, or just checking in — we're always here. When we're live, request a shout-out on air!</p>
+      <input type="text" id="fanName" placeholder="Your name or handle (optional)" />
+      <textarea id="fanMessage" rows="3" placeholder="What's on your heart? We read every message…"></textarea>
+      <button id="sendFanMessage" type="button">Send Message</button>
+      <div id="fanMessageStatus" class="fan-message-status"></div>
+    </div>
+
+    <div id="messages" class="chat-messages">
+      <div class="message bot">
+        👋 Welcome to Sidney's OTR Driver Ministry! Tap the mic or type what's on your mind — I'll find a teaching that fits. Or use the panel above to message Sidney directly.
+      </div>
+    </div>
+
+    <form id="chatForm" class="chat-input">
+      <button type="button" id="micBtn" title="Tap to speak">🎤</button>
+      <input type="text" id="userInput" placeholder="What's on your mind?" autocomplete="off" />
+      <button type="submit">➤</button>
+    </form>
+
+    <div class="nav-bar">
+      <a href="/sidney/">← Ministry Home</a>
+      <a href="https://hopepal.life">Powered by HopePal</a>
+    </div>
+  </div>
+
+  <script>
+    /* ── CONFIG ───────────────────────────────────────── */
+    const BASE_URL        = 'https://otr-ministry-production.up.railway.app';
+    const CLIENT          = 'sidney';
+    // ⚠️ Update this to your AzuraCast HTTPS URL once SSL cert is installed
+    const LIVE_AUDIO_STREAM = 'https://stream.hopepal.life/listen/hopepal/radio.mp3';
+    const DONATE_URL        = 'https://thebotosphere.com';
+
+    /* ── AES-256-GCM ENCRYPTION ── */
+    const AES_KEY_B64 = 'fF/Gx3ZKFqD4KZTAo5wyu55dledR7EMTitZeeF36Pgg=';
+
+    async function getKey() {
+      const raw = Uint8Array.from(atob(AES_KEY_B64), c => c.charCodeAt(0));
+      return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt']);
+    }
+
+    async function encryptMessage(text) {
+      const key = await getKey();
+      const iv  = crypto.getRandomValues(new Uint8Array(12));
+      const enc = new TextEncoder().encode(text);
+      const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc);
+      const combined = new Uint8Array(iv.byteLength + ct.byteLength);
+      combined.set(iv, 0);
+      combined.set(new Uint8Array(ct), iv.byteLength);
+      return btoa(String.fromCharCode(...combined));
+    }
+
+    /* ── SPEECH SYNTHESIS ─────────────────────────────── */
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.rate  = 0.92;
+      utt.pitch = 1.0;
+      // Prefer a warm male voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v =>
+        v.name.includes('Google US English') ||
+        v.name.includes('David') ||
+        (v.lang === 'en-US' && v.name.toLowerCase().includes('male'))
+      );
+      if (preferred) utt.voice = preferred;
+      window.speechSynthesis.speak(utt);
+    }
+
+    // Voices load async on some browsers
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => {};
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const messages      = document.getElementById('messages');
+      const liveBadge     = document.getElementById('liveBadge');
+      const audioCard     = document.getElementById('xsen-audio-card');
+      const audioEl       = document.getElementById('xsenAudio');
+      const audioStatus   = document.getElementById('audioStatus');
+      const listenLiveBtn = document.getElementById('listenLiveBtn');
+      const donateBtn     = document.getElementById('donateBtn');
+      const fanNameInput  = document.getElementById('fanName');
+      const fanMsgInput   = document.getElementById('fanMessage');
+      const sendFanMsgBtn = document.getElementById('sendFanMessage');
+      const fanMsgStatus  = document.getElementById('fanMessageStatus');
+      const form          = document.getElementById('chatForm');
+      const input         = document.getElementById('userInput');
+      const micBtn        = document.getElementById('micBtn');
+
+      /* ── HELPERS ── */
+      function addMsg(text, sender) {
+        const div = document.createElement('div');
+        div.className = `message ${sender}`;
+        div.textContent = text;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+        return div;
+      }
+
+      function addLessonCard(lesson) {
+        const div  = document.createElement('div');
+        div.className = 'message bot lesson-card';
+        const mins = lesson.duration_seconds ? Math.round(lesson.duration_seconds / 60) : null;
+        div.innerHTML = `
+          <div class="lesson-week">Week ${lesson.week}</div>
+          <div class="lesson-title">${lesson.title}</div>
+          ${lesson.scripture ? `<div class="lesson-scripture">📖 ${lesson.scripture}</div>` : ''}
+          <div class="lesson-summary">${lesson.summary}</div>
+          ${lesson.audio_url
+            ? `<audio controls src="${lesson.audio_url}"></audio>
+               ${mins ? `<div class="lesson-duration">⏱ ${mins} min</div>` : ''}`
+            : `<div class="lesson-coming">🎙 Audio coming soon — message Sidney for this teaching</div>`
+          }
+        `;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function addChoices(results) {
+        if (!results.length) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'message bot';
+        wrapper.innerHTML = '<div style="margin-bottom:6px;font-size:13px;">These might also fit:</div>';
+        const choices = document.createElement('div');
+        choices.className = 'lesson-choices';
+        results.forEach(r => {
+          const btn = document.createElement('button');
+          btn.className = 'lesson-choice-btn';
+          btn.textContent = `Week ${r.week} — ${r.title}`;
+          btn.addEventListener('click', () => {
+            speak(`Here is ${r.title}`);
+            addLessonCard(r);
+            wrapper.remove();
+          });
+          choices.appendChild(btn);
+        });
+        wrapper.appendChild(choices);
+        messages.appendChild(wrapper);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      /* ── LESSON SEARCH ── */
+      async function handleQuery(text) {
+        if (!text.trim()) return;
+        addMsg(text, 'user');
+        input.value = '';
+
+        const typing = addMsg('…', 'bot');
+
+        try {
+          const res = await fetch(`${BASE_URL}/${CLIENT}/lessons/search`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ query: text })
+          });
+          const data = await res.json();
+          typing.remove();
+
+          if (data.results && data.results.length > 0) {
+            const lesson = data.results[0];
+            speak(`I found something that might help — ${lesson.title}`);
+            addLessonCard(lesson);
+            if (data.results.length > 1) addChoices(data.results.slice(1));
+          } else {
+            speak("I don't have a teaching on that yet — but Sidney does. Use the message panel to reach out.");
+            addMsg("I don't have a teaching on that yet 🙏 — use the message panel above to reach Sidney directly.", 'bot');
+          }
+        } catch (err) {
+          typing.remove();
+          addMsg('🙏 Something went wrong — use the message panel above to reach Sidney directly.', 'bot');
+        }
+      }
+
+      /* ── VOICE INPUT ── */
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      let recognition = null;
+
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous    = false;
+        recognition.interimResults = false;
+        recognition.lang          = 'en-US';
+
+        recognition.onresult = (e) => {
+          const transcript = e.results[0][0].transcript;
+          handleQuery(transcript);
+        };
+
+        recognition.onerror = () => {
+          micBtn.textContent = '🎤';
+          micBtn.classList.remove('listening');
+          addMsg('Could not hear you — try typing instead.', 'bot');
+        };
+
+        recognition.onend = () => {
+          micBtn.textContent = '🎤';
+          micBtn.classList.remove('listening');
+        };
+      } else {
+        micBtn.title = 'Voice not supported in this browser';
+        micBtn.style.opacity = '0.3';
+      }
+
+      micBtn.addEventListener('click', () => {
+        if (!recognition) return;
+        micBtn.textContent = '🔴';
+        micBtn.classList.add('listening');
+        speak('');
+        try { recognition.start(); } catch (e) { /* already started */ }
+      });
+
+      /* ── TEXT SUBMIT ── */
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleQuery(input.value.trim());
+      });
+
+      /* ── SEND ENCRYPTED MESSAGE ── */
+      sendFanMsgBtn?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const name    = fanNameInput?.value.trim();
+        const message = fanMsgInput?.value.trim();
+        if (!message) { fanMsgStatus.textContent = 'Please enter a message.'; return; }
+        fanMsgStatus.textContent = 'Encrypting & sending…';
+        try {
+          const encrypted = await encryptMessage(message);
+          const res = await fetch(`${BASE_URL}/${CLIENT}/ministry-message`, {
+            method: 'POST',
+            body: new URLSearchParams({
+              name:    name || 'Anonymous Driver',
+              message: encrypted,
+              source:  "Sidney's OTR Ministry"
+            })
+          });
+          if (!res.ok) throw new Error('Send failed');
+          fanMsgStatus.textContent = "✅ Message received — we'll be in touch. Safe travels!";
+          fanMsgInput.value = '';
+        } catch (err) {
+          fanMsgStatus.textContent = '❌ Could not send. Please try again.';
+        }
+      });
+
+      /* ── LIVE AUDIO ── */
+      function playAudio() {
+        if (!audioEl || !audioCard) return;
+        audioCard.style.display = 'block';
+        audioEl.src = `${LIVE_AUDIO_STREAM}?ts=${Date.now()}`;
+        audioEl.play()
+          .then(() => { if (audioStatus) audioStatus.textContent = '🔊 Live broadcast playing'; })
+          .catch(() => { if (audioStatus) audioStatus.textContent = 'Tap ▶ to start audio'; });
+      }
+
+      listenLiveBtn?.addEventListener('click', () => {
+        addMsg('🔴 Connecting to the live broadcast…', 'bot');
+        playAudio();
+      });
+
+      donateBtn?.addEventListener('click', () => {
+        window.open(DONATE_URL, '_blank', 'noopener');
+      });
+
+      /* ── LIVE STATUS POLLING ── */
+      async function updateLiveStatus() {
+        if (!liveBadge) return;
+        try {
+          const res  = await fetch(`${BASE_URL}/${CLIENT}/live-status`, { cache: 'no-store' });
+          const data = await res.json();
+          if (data.isLive) {
+            liveBadge.textContent = '🔴 LIVE';
+            liveBadge.className   = 'live-badge live';
+          } else {
+            liveBadge.textContent = '⚪ OFFLINE';
+            liveBadge.className   = 'live-badge offline';
+          }
+        } catch (e) { console.warn('Live status check failed:', e); }
+      }
+
+      updateLiveStatus();
+      setInterval(updateLiveStatus, 20000);
+    });
+  </script>
+</body>
+</html>
