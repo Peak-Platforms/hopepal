@@ -328,7 +328,65 @@
       border-color: #841617;
     }
 
-    .loading {
+    .reply-btn {
+      margin-top: 10px;
+      background: none;
+      border: 1px solid #2a4a3a;
+      color: #4caf83;
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      width: 100%;
+    }
+
+    .reply-btn:hover { background: rgba(76,175,131,0.1); }
+
+    .reply-input {
+      width: 100%;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px 10px;
+      resize: none;
+      line-height: 1.5;
+    }
+
+    .reply-input:focus { outline: none; border-color: #4caf83; }
+
+    .reply-send-btn {
+      background: #1a6b3a;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .reply-send-btn:hover { opacity: 0.85; }
+
+    .reply-cancel-btn {
+      background: #222;
+      color: #888;
+      border: 1px solid #333;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .reply-status {
+      font-size: 11px;
+      margin-top: 6px;
+      min-height: 14px;
+    }
       text-align: center;
       padding: 40px 20px;
       color: #666;
@@ -541,7 +599,8 @@
 
         const card = document.createElement('div');
         card.className = `msg-card${i === 0 ? ' first-unread' : ''}`;
-        card.dataset.id = msg.id;
+        card.dataset.id    = msg.id;
+        card.dataset.token = msg.driver_token || '';
 
         card.innerHTML = `
           <div class="msg-top">
@@ -560,6 +619,17 @@
                 </div>
                 <button class="delete-btn" onclick="deleteOne('${msg.id}', this.closest('.msg-card'))">🗑 Delete</button>
               </div>
+              ${msg.driver_token ? `
+              <div class="reply-row" id="reply-row-${msg.id}" style="display:none;margin-top:10px;">
+                <textarea class="reply-input" placeholder="Type your reply… it will be encrypted and delivered to the driver." rows="2"></textarea>
+                <div style="display:flex;gap:8px;margin-top:6px;justify-content:flex-end;">
+                  <button class="reply-cancel-btn" onclick="toggleReply('${msg.id}')">Cancel</button>
+                  <button class="reply-send-btn" onclick="sendReply('${msg.id}', '${msg.driver_token}', this.closest('.reply-row'))">🔐 Send Reply</button>
+                </div>
+                <div class="reply-status"></div>
+              </div>
+              <button class="reply-btn" onclick="toggleReply('${msg.id}')">💬 Reply</button>
+              ` : '<div style="font-size:11px;color:#555;margin-top:8px;">No token — cannot reply to this message</div>'}
             </div>
           </div>
         `;
@@ -686,7 +756,62 @@
       }
     });
 
-    /* ── REFRESH ── */
+    /* ── REPLY ── */
+    function toggleReply(msgId) {
+      const row = document.getElementById(`reply-row-${msgId}`);
+      if (!row) return;
+      const visible = row.style.display !== 'none';
+      row.style.display = visible ? 'none' : 'block';
+      if (!visible) row.querySelector('.reply-input').focus();
+    }
+
+    async function sendReply(msgId, driverToken, replyRow) {
+      const input  = replyRow.querySelector('.reply-input');
+      const status = replyRow.querySelector('.reply-status');
+      const text   = input.value.trim();
+      if (!text) return;
+
+      status.textContent = 'Encrypting & sending…';
+      status.style.color = '#888';
+
+      try {
+        // Encrypt the reply
+        const key = await crypto.subtle.importKey(
+          'raw',
+          Uint8Array.from(atob(AES_KEY_B64), c => c.charCodeAt(0)),
+          { name: 'AES-GCM' }, false, ['encrypt']
+        );
+        const iv  = crypto.getRandomValues(new Uint8Array(12));
+        const ct  = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          key,
+          new TextEncoder().encode(text)
+        );
+        const combined = new Uint8Array(iv.byteLength + ct.byteLength);
+        combined.set(iv, 0);
+        combined.set(new Uint8Array(ct), iv.byteLength);
+        const encrypted = btoa(String.fromCharCode(...combined));
+
+        const res = await fetch(`${BASE_URL}/${CLIENT}/replies`, {
+          method:  'POST',
+          headers: {
+            'Content-Type':      'application/json',
+            'x-reader-password': sessionPassword
+          },
+          body: JSON.stringify({ driver_token: driverToken, reply: encrypted })
+        });
+
+        if (!res.ok) throw new Error('Send failed');
+
+        status.textContent = '✅ Reply sent — driver will receive it within 30 seconds';
+        status.style.color = '#4caf83';
+        input.value = '';
+        setTimeout(() => toggleReply(msgId), 2000);
+      } catch (err) {
+        status.textContent = '❌ Could not send. Try again.';
+        status.style.color = '#ff6b6b';
+      }
+    }
     document.getElementById('refreshBtn').addEventListener('click', async () => {
       document.getElementById('messageList').innerHTML = '<div class="loading">Refreshing…</div>';
       try {
@@ -722,3 +847,4 @@
   </script>
 </body>
 </html>
+
