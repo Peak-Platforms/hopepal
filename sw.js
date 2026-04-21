@@ -1,5 +1,5 @@
-const CACHE_NAME = 'hopepal-v1';
-const OFFLINE_FILES = ['/reader.html', '/manifest.json'];
+const CACHE_NAME = 'hopepal-v2';
+const OFFLINE_FILES = ['/sidney/reader.html', '/manifest.json'];
 
 /* ── INSTALL: cache core files ── */
 self.addEventListener('install', event => {
@@ -28,17 +28,17 @@ self.addEventListener('fetch', event => {
 
 /* ── PUSH: show notification when new message arrives ── */
 self.addEventListener('push', event => {
-  const data = event.data?.json() || {};
-  const title   = data.title   || 'HopePal — New Message';
-  const body    = data.body    || 'A driver has sent you a message.';
+  const data    = event.data?.json() || {};
+  const title   = data.title || 'HopePal — New Message';
+  const body    = data.body  || 'A driver has sent you a message.';
   const options = {
     body,
-    icon:  '/manifest.json',
-    badge: '/manifest.json',
-    tag:   'hopepal-message',
+    icon:     '/manifest.json',
+    badge:    '/manifest.json',
+    tag:      'hopepal-message',
     renotify: true,
-    vibrate: [200, 100, 200],
-    data: { url: '/reader.html' }
+    vibrate:  [200, 100, 200],
+    data:     { url: '/sidney/reader.html' }
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
@@ -53,7 +53,7 @@ self.addEventListener('notificationclick', event => {
           return client.focus();
         }
       }
-      return clients.openWindow('/reader.html');
+      return clients.openWindow('/sidney/reader.html');
     })
   );
 });
