@@ -692,10 +692,21 @@
 
   /* ── FETCH ALL LESSONS ── */
   async function loadLessons() {
-    const res  = await fetch(`${SUPABASE_URL}/rest/v1/lessons?select=*&order=week.asc`, { headers });
-    allLessons = await res.json();
-    renderSidebar();
-    renderStats();
+    try {
+      const res  = await fetch(`${SUPABASE_URL}/rest/v1/lessons?select=*&order=week.asc`, { headers });
+      const data = await res.json();
+      if (!res.ok) {
+        console.error('Supabase error:', JSON.stringify(data));
+        document.getElementById('weekList').innerHTML = `<div style="color:#ff6b6b;padding:20px;font-size:12px;">Error ${res.status}: ${data.message || data.hint || 'Check API key in admin.html'}</div>`;
+        return;
+      }
+      allLessons = Array.isArray(data) ? data : [];
+      renderSidebar();
+      renderStats();
+    } catch (err) {
+      console.error('loadLessons error:', err);
+      document.getElementById('weekList').innerHTML = `<div style="color:#ff6b6b;padding:20px;font-size:12px;">Network error: ${err.message}</div>`;
+    }
   }
 
   /* ── SIDEBAR ── */
@@ -841,13 +852,13 @@
     // Standard share link: /file/d/FILE_ID/view
     const match = input.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
     if (match) {
-      return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+      return `https://drive.google.com/uc?export=view&id=${match[1]}`;
     }
 
     // Open link: ?id=FILE_ID
     const idMatch = input.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if (idMatch) {
-      return `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
+      return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
     }
 
     return null;
