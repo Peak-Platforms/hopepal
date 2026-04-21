@@ -557,7 +557,7 @@
           </div>
 
           <div class="audio-preview" id="audioPreview">
-            <audio controls id="audioEl"></audio>
+            <iframe id="audioEl" style="width:100%;height:80px;border:none;border-radius:8px;" allow="autoplay"></iframe>
           </div>
 
           <div class="field-hint" style="margin-top:8px;">
@@ -676,7 +676,7 @@
   /* ── CONFIG ── */
   const SUPABASE_URL = 'https://ggvtxauxjkixszvyirsl.supabase.co';
   // ⚠️ Replace with your anon key from Supabase → Settings → API
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdndnR4YXV4amtpeHN6dnlpcnNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NDYyMDcsImV4cCI6MjA4ODIyMjIwN30.XEzPwh7-BYc7FnfU21AvXExQjhd-6UwJ4G8og3dYqaY';
+  const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
   const headers = {
     'apikey':        SUPABASE_KEY,
@@ -844,21 +844,21 @@
     input = input.trim();
 
     // Already a direct URL — pass through
-    if (input.startsWith('https://drive.google.com/uc') ||
-        input.startsWith('https://lh3.googleusercontent.com')) {
+    if (input.startsWith('https://drive.google.com/file/d/') &&
+        input.endsWith('/preview')) {
       return input;
     }
 
-    // Standard share link: /file/d/FILE_ID/view
+    // Standard share link: /file/d/FILE_ID/view or /file/d/FILE_ID
     const match = input.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
     if (match) {
-      return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      return `https://drive.google.com/file/d/${match[1]}/preview`;
     }
 
     // Open link: ?id=FILE_ID
     const idMatch = input.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if (idMatch) {
-      return `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+      return `https://drive.google.com/file/d/${idMatch[1]}/preview`;
     }
 
     return null;
@@ -962,3 +962,4 @@
 </script>
 </body>
 </html>
+
