@@ -841,13 +841,13 @@
     // Standard share link: /file/d/FILE_ID/view
     const match = input.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
     if (match) {
-      return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+    return `https://drive.google.com/file/d/${match[1]}/view`;
     }
 
     // Open link: ?id=FILE_ID
     const idMatch = input.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if (idMatch) {
-      return `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
+      return `https://drive.google.com/file/d/${idMatch[1]}/view`;
     }
 
     return null;
