@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HopePal — Lesson Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+      --red:    #841617;
+      --red-lt: #f5e8e8;
+      --cream:  #FDF9D8;
+      --dark:   #1a1007;
+      --mid:    #5a4a3a;
+      --border: #ddd3c5;
+      --green:  #1a6b3a;
+      --green-lt: #e6f4ec;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f7f3ec;
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    /* ── LAYOUT ── */
+    .shell {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      background: var(--dark);
+      padding: 28px 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 12px;
+    }
+
+    .sidebar-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--cream);
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      margin-top: 3px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .week-group { margin-bottom: 8px; }
+
+    .week-group-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.25);
+      padding: 8px 20px 4px;
+    }
+
+    .week-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+      color: rgba(255,255,255,0.55);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+    }
+
+    .week-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .week-btn.active { background: rgba(132,22,23,0.35); color: var(--cream); }
+
+    .week-num {
+      font-size: 10px;
+      font-weight: 500;
+      min-width: 22px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .week-title-short {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot.published { background: #4caf83; }
+    .dot.draft     { background: rgba(255,255,255,0.15); }
+
+    /* ── MAIN ── */
+    .main {
+      padding: 40px 48px;
+      max-width: 820px;
+    }
+
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: var(--mid);
+      margin-bottom: 36px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .week-badge {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--red-lt);
+      color: var(--red);
+      padding: 3px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── FORM ── */
+    .field { margin-bottom: 20px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--mid);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fdfaf6;
+      color: var(--dark);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(132,22,23,0.08);
+    }
+
+    textarea { resize: vertical; line-height: 1.6; }
+
+    .field-hint {
+      font-size: 11px;
+      color: #a09080;
+      margin-top: 5px;
+    }
+
+    /* ── KEYWORDS ── */
+    .keyword-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fdfaf6;
+      cursor: text;
+      transition: border-color 0.15s;
+    }
+
+    .keyword-wrap:focus-within {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(132,22,23,0.08);
+    }
+
+    .kw-tag {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--red-lt);
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    .kw-remove {
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      color: var(--red);
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .kw-input {
+      border: none !important;
+      background: transparent !important;
+      outline: none !important;
+      box-shadow: none !important;
+      padding: 2px 4px !important;
+      font-size: 13px;
+      min-width: 80px;
+      flex: 1;
+    }
+
+    /* ── AUDIO ── */
+    .audio-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .audio-preview {
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .audio-preview audio { width: 100%; }
+
+    /* ── PUBLISH TOGGLE ── */
+    .publish-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: #f7f3ec;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .publish-label { font-size: 14px; font-weight: 500; }
+    .publish-hint  { font-size: 11px; color: var(--mid); margin-top: 2px; }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #ccc;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle input:checked + .toggle-track { background: var(--green); }
+
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle input:checked + .toggle-track::after { transform: translateX(20px); }
+
+    /* ── BUTTONS ── */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      padding: 11px 24px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:hover { opacity: 0.88; }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary { background: var(--red); color: var(--cream); }
+    .btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--mid); }
+
+    /* ── STATUS TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--dark);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 999;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success::before { content: '✓  '; color: #4caf83; }
+    .toast.error::before   { content: '✕  '; color: #e05555; }
+
+    /* ── STATS ROW ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      color: var(--red);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--mid);
+      margin-top: 4px;
+    }
+
+    /* ── LOADING ── */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: var(--mid);
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: relative; height: auto; }
+      .main { padding: 24px 20px; }
+    }
+
+    /* ── HELP ── */
+    #emptyState { max-width: 680px; }
+
+    .help-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .help-item {
+      background: #f7f3ec;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .help-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--red);
+      margin-bottom: 5px;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: var(--mid);
+      line-height: 1.6;
+    }
+
+    .help-steps {
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .help-steps li {
+      font-size: 13px;
+      color: var(--mid);
+      line-height: 1.5;
+      padding-left: 4px;
+    }
+
+    .help-steps li strong { color: var(--dark); }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">HopePal</div>
+      <div class="sidebar-sub">Lesson Admin</div>
+    </div>
+    <div id="weekList"><div class="loading" style="color:rgba(255,255,255,0.3);padding:20px">Loading…</div></div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+    <div class="page-title">Lesson Editor</div>
+    <div class="page-sub">Select a week from the sidebar to edit. Changes save directly to Supabase.</div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-num" id="statTotal">—</div>
+        <div class="stat-label">Total lessons</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statPublished">—</div>
+        <div class="stat-label">Published</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statAudio">—</div>
+        <div class="stat-label">With audio</div>
+      </div>
+    </div>
+
+    <!-- Editor -->
+    <div id="editor" style="display:none;">
+
+      <div class="card">
+        <div class="card-title">
+          <span id="edWeekBadge" class="week-badge">Week —</span>
+          <span id="edCardTitle">Select a week</span>
+        </div>
+
+        <div class="field">
+          <label>Title</label>
+          <input type="text" id="edTitle" placeholder="e.g. How Do You See Things?" />
+        </div>
+
+        <div class="field">
+          <label>Scripture</label>
+          <input type="text" id="edScripture" placeholder="e.g. Jeremiah 29:11" />
+        </div>
+
+        <div class="field">
+          <label>Summary</label>
+          <textarea id="edSummary" rows="3" placeholder="1-2 sentences. This is what the chatbot reads to match driver queries."></textarea>
+          <div class="field-hint">Keep it conversational — drivers query in plain language, not theology.</div>
+        </div>
+
+        <div class="field">
+          <label>Keywords</label>
+          <div class="keyword-wrap" id="kwWrap">
+            <input class="kw-input" id="kwInput" type="text" placeholder="Type a keyword and press Enter…" />
+          </div>
+          <div class="field-hint">Add specific OTR situations, emotions, and topics. More keywords = better chatbot matching.</div>
+        </div>
+
+        <div class="field">
+          <label>Themes</label>
+          <div class="keyword-wrap" id="themeWrap">
+            <input class="kw-input" id="themeInput" type="text" placeholder="Type a theme and press Enter…" />
+          </div>
+          <div class="field-hint">Broader categories: identity, family, faith, purpose, etc.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Audio</div>
+
+        <div class="field">
+          <label>Google Drive Share Link</label>
+          <div class="audio-row">
+            <input type="text" id="driveInput" placeholder="Paste Google Drive share link here…" oninput="handleDriveInput(this.value)" />
+            <button class="btn btn-ghost" onclick="previewAudio()">Preview</button>
+          </div>
+
+          <!-- Conversion status -->
+          <div id="driveStatus" style="display:none;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:12px;"></div>
+
+          <!-- Converted URL (readonly) -->
+          <div id="driveConverted" style="display:none;margin-top:8px;">
+            <label style="margin-bottom:4px;">Converted playback URL</label>
+            <input type="text" id="edAudioUrl" readonly style="background:#f0f0f0;font-size:12px;color:#555;" />
+          </div>
+
+          <div class="audio-preview" id="audioPreview">
+            <audio controls id="audioEl"></audio>
+          </div>
+
+          <div class="field-hint" style="margin-top:8px;">
+            In Google Drive: right-click the .m4a file → Share → Anyone with the link → Copy link. Paste it above — the playback URL is generated automatically.
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Duration (minutes)</label>
+          <input type="text" id="edDuration" placeholder="e.g. 30" style="max-width:120px;" />
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Publish</div>
+        <div class="publish-row">
+          <div>
+            <div class="publish-label">Make this lesson live</div>
+            <div class="publish-hint">Only published lessons appear in the chatbot</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="edPublished" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveLesson()">Save Changes</button>
+        <button class="btn btn-ghost" onclick="resetForm()">Discard</button>
+      </div>
+
+    </div>
+
+    <div id="emptyState">
+
+      <!-- Welcome -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">👋 How to use this page</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--mid);margin-bottom:16px;">
+          Select any week from the sidebar to edit it. Each lesson has five things that matter
+          for the chatbot to work correctly — title, scripture, summary, keywords, and audio.
+          Here is what each one does.
+        </p>
+
+        <div class="help-row">
+          <div class="help-item">
+            <div class="help-label">Title</div>
+            <div class="help-text">The name of the teaching. Shown to the driver when a match is found. Replace the placeholder with your actual doc title.</div>
+          </div>
+          <div class="help-item">
+            <div class="help-label">Scripture</div>
+            <div class="help-text">The primary verse for this week. Shown under the title in the lesson card. Format: Book Chapter:Verse — e.g. <em>Jeremiah 29:11</em>.</div>
+          </div>
+          <div class="help-item">
+            <div class="help-label">Summary</div>
+            <div class="help-text">1–2 sentences describing what this teaching is about. Write it in plain language — this is what the chatbot searches when a driver types a query. The more specific and OTR-relevant, the better the matches.</div>
+          </div>
+          <div class="help-item">
+            <div class="help-label">Keywords</div>
+            <div class="help-text">Specific words a driver might type or say — emotions, situations, OTR life. Type each one and press <strong>Enter</strong>. Examples: <em>lonely, wife, 3am, argument, fired, kids, driveway</em>. These are the primary search layer — add as many as fit.</div>
+          </div>
+          <div class="help-item">
+            <div class="help-label">Themes</div>
+            <div class="help-text">Broader topic categories used as a fallback search. Keep these to 3–5 per lesson. Examples: <em>identity, marriage, faith, purpose, forgiveness</em>.</div>
+          </div>
+          <div class="help-item">
+            <div class="help-label">Audio URL</div>
+            <div class="help-text">The direct track URL from AzuraCast after you upload the .m4a file. In AzuraCast go to Media → click the track → copy the stream/download URL. Paste it here and click Preview to confirm it plays before saving.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workflow -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">🔄 Weekly workflow</div>
+        <ol class="help-steps">
+          <li>Reformat your doc using the NotebookLM template</li>
+          <li>Upload the doc to NotebookLM → generate Audio Overview → download .m4a</li>
+          <li>Upload .m4a to AzuraCast Media library → copy the track URL</li>
+          <li>Open this page → select the week → fill in title, scripture, summary, keywords</li>
+          <li>Paste the AzuraCast URL → click Preview to confirm audio plays</li>
+          <li>Toggle <strong>Publish</strong> to ON → click <strong>Save Changes</strong></li>
+          <li>Green dot appears in the sidebar — lesson is live in the chatbot</li>
+        </ol>
+        <p style="font-size:12px;color:var(--mid);margin-top:14px;">
+          Lessons with <strong>Publish OFF</strong> are invisible to drivers until you turn them on.
+          You can save a half-finished lesson and come back to it.
+        </p>
+      </div>
+
+      <!-- Dots legend -->
+      <div class="card">
+        <div class="card-title">🟢 Sidebar dots</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mid);">
+            <span class="dot published" style="width:10px;height:10px;border-radius:50%;background:#4caf83;flex-shrink:0;"></span>
+            <span><strong style="color:var(--dark)">Green dot</strong> — published and live in the chatbot</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mid);">
+            <span style="width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,0.15);flex-shrink:0;display:inline-block;"></span>
+            <span><strong style="color:var(--dark)">Dim dot</strong> — draft, not visible to drivers yet</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ── CONFIG ── */
+  const SUPABASE_URL = 'https://ggvtxauxjkixszvyirsl.supabase.co';
+  // ⚠️ Replace with your anon key from Supabase → Settings → API
+  const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+  const headers = {
+    'apikey':        SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type':  'application/json',
+    'Prefer':        'return=representation'
+  };
+
+  let allLessons  = [];
+  let currentWeek = null;
+  let keywords    = [];
+  let themes      = [];
+
+  /* ── FETCH ALL LESSONS ── */
+  async function loadLessons() {
+    const res  = await fetch(`${SUPABASE_URL}/rest/v1/lessons?select=*&order=week.asc`, { headers });
+    allLessons = await res.json();
+    renderSidebar();
+    renderStats();
+  }
+
+  /* ── SIDEBAR ── */
+  function renderSidebar() {
+    const groups = [
+      { label: 'Identity — Weeks 1–13',      range: [1,13]  },
+      { label: 'Relationships — Weeks 14–26', range: [14,26] },
+      { label: 'Purpose — Weeks 27–39',       range: [27,39] },
+      { label: 'Faith in the Dark — 40–52',   range: [40,52] },
+    ];
+
+    const list = document.getElementById('weekList');
+    list.innerHTML = '';
+
+    groups.forEach(g => {
+      const group = document.createElement('div');
+      group.className = 'week-group';
+      group.innerHTML = `<div class="week-group-label">${g.label}</div>`;
+
+      allLessons
+        .filter(l => l.week >= g.range[0] && l.week <= g.range[1])
+        .forEach(l => {
+          const btn = document.createElement('button');
+          btn.className = `week-btn${currentWeek === l.week ? ' active' : ''}`;
+          btn.dataset.week = l.week;
+          btn.innerHTML = `
+            <span class="week-num">${String(l.week).padStart(2,'0')}</span>
+            <span class="week-title-short">${l.title || 'Untitled'}</span>
+            <span class="dot ${l.published ? 'published' : 'draft'}"></span>
+          `;
+          btn.addEventListener('click', () => selectWeek(l.week));
+          group.appendChild(btn);
+        });
+
+      list.appendChild(group);
+    });
+  }
+
+  /* ── STATS ── */
+  function renderStats() {
+    document.getElementById('statTotal').textContent     = allLessons.length;
+    document.getElementById('statPublished').textContent = allLessons.filter(l => l.published).length;
+    document.getElementById('statAudio').textContent     = allLessons.filter(l => l.audio_url).length;
+  }
+
+  /* ── SELECT WEEK ── */
+  function selectWeek(week) {
+    currentWeek = week;
+    const lesson = allLessons.find(l => l.week === week);
+    if (!lesson) return;
+
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('editor').style.display     = 'block';
+
+    document.getElementById('edWeekBadge').textContent = `Week ${week}`;
+    document.getElementById('edCardTitle').textContent = lesson.title || 'Untitled';
+    document.getElementById('edTitle').value           = lesson.title || '';
+    document.getElementById('edScripture').value       = lesson.scripture || '';
+    document.getElementById('edSummary').value         = lesson.summary || '';
+    document.getElementById('edAudioUrl').value        = lesson.audio_url || '';
+    document.getElementById('edDuration').value        = lesson.duration_seconds
+      ? Math.round(lesson.duration_seconds / 60) : '';
+    document.getElementById('edPublished').checked     = !!lesson.published;
+
+    // Populate drive input and show converted URL if audio exists
+    const driveInput    = document.getElementById('driveInput');
+    const driveConverted = document.getElementById('driveConverted');
+    const driveStatus   = document.getElementById('driveStatus');
+    if (lesson.audio_url) {
+      driveInput.value          = lesson.audio_url;
+      driveConverted.style.display = 'block';
+      driveStatus.style.display = 'none';
+    } else {
+      driveInput.value             = '';
+      driveConverted.style.display = 'none';
+      driveStatus.style.display    = 'none';
+    }
+
+    // Reset audio preview
+    document.getElementById('audioPreview').style.display = 'none';
+
+    // Keywords
+    keywords = [...(lesson.keywords || [])];
+    themes   = [...(lesson.themes   || [])];
+    renderTags('kwWrap',    'kwInput',    keywords);
+    renderTags('themeWrap', 'themeInput', themes);
+
+    // Sidebar active state
+    renderSidebar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ── TAG INPUTS ── */
+  function renderTags(wrapId, inputId, arr) {
+    const wrap  = document.getElementById(wrapId);
+    const input = document.getElementById(inputId);
+    wrap.innerHTML = '';
+    arr.forEach((kw, i) => {
+      const tag = document.createElement('span');
+      tag.className = 'kw-tag';
+      tag.innerHTML = `${kw}<button class="kw-remove" data-i="${i}" data-wrap="${wrapId}">×</button>`;
+      wrap.appendChild(tag);
+    });
+    wrap.appendChild(input);
+    input.focus();
+  }
+
+  function setupTagInput(inputId, wrapId, arr) {
+    const input = document.getElementById(inputId);
+    input.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === ',') && input.value.trim()) {
+        e.preventDefault();
+        const val = input.value.trim().toLowerCase().replace(/,/g,'');
+        if (val && !arr.includes(val)) { arr.push(val); renderTags(wrapId, inputId, arr); }
+        input.value = '';
+      }
+      if (e.key === 'Backspace' && !input.value && arr.length) {
+        arr.pop();
+        renderTags(wrapId, inputId, arr);
+      }
+    });
+
+    document.getElementById(wrapId).addEventListener('click', e => {
+      if (e.target.classList.contains('kw-remove')) {
+        const i = parseInt(e.target.dataset.i);
+        arr.splice(i, 1);
+        renderTags(wrapId, inputId, arr);
+      }
+      document.getElementById(inputId).focus();
+    });
+  }
+
+  /* ── GOOGLE DRIVE CONVERTER ── */
+  function convertDriveUrl(input) {
+    input = input.trim();
+
+    // Already a direct URL — pass through
+    if (input.startsWith('https://drive.google.com/uc') ||
+        input.startsWith('https://lh3.googleusercontent.com')) {
+      return input;
+    }
+
+    // Standard share link: /file/d/FILE_ID/view
+    const match = input.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (match) {
+      return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+    }
+
+    // Open link: ?id=FILE_ID
+    const idMatch = input.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (idMatch) {
+      return `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
+    }
+
+    return null;
+  }
+
+  function handleDriveInput(val) {
+    const status    = document.getElementById('driveStatus');
+    const converted = document.getElementById('driveConverted');
+    const urlInput  = document.getElementById('edAudioUrl');
+
+    if (!val.trim()) {
+      status.style.display    = 'none';
+      converted.style.display = 'none';
+      urlInput.value = '';
+      return;
+    }
+
+    const url = convertDriveUrl(val.trim());
+
+    if (url) {
+      urlInput.value = url;
+      converted.style.display = 'block';
+      status.style.display    = 'block';
+      status.style.background = '#e6f4ec';
+      status.style.color      = '#1a6b3a';
+      status.textContent      = '✓ Google Drive link converted — click Preview to test, then Save.';
+    } else {
+      urlInput.value = '';
+      converted.style.display = 'none';
+      status.style.display    = 'block';
+      status.style.background = '#fdf0f0';
+      status.style.color      = '#841617';
+      status.textContent      = 'Could not parse this link. Make sure you copied the full Google Drive share URL.';
+    }
+  }
+  function previewAudio() {
+    const url = document.getElementById('edAudioUrl').value.trim();
+    if (!url) return;
+    const preview = document.getElementById('audioPreview');
+    const el      = document.getElementById('audioEl');
+    el.src = url;
+    preview.style.display = 'block';
+  }
+
+  /* ── SAVE ── */
+  async function saveLesson() {
+    if (!currentWeek) return;
+
+    const durMins = parseInt(document.getElementById('edDuration').value) || null;
+    const payload = {
+      title:            document.getElementById('edTitle').value.trim(),
+      scripture:        document.getElementById('edScripture').value.trim(),
+      summary:          document.getElementById('edSummary').value.trim(),
+      keywords:         keywords,
+      themes:           themes,
+      audio_url:        document.getElementById('edAudioUrl').value.trim() || null,
+      duration_seconds: durMins ? durMins * 60 : null,
+      published:        document.getElementById('edPublished').checked,
+    };
+
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/lessons?week=eq.${currentWeek}`,
+        { method: 'PATCH', headers, body: JSON.stringify(payload) }
+      );
+
+      if (!res.ok) throw new Error(await res.text());
+
+      // Update local cache
+      const idx = allLessons.findIndex(l => l.week === currentWeek);
+      if (idx > -1) allLessons[idx] = { ...allLessons[idx], ...payload };
+
+      renderSidebar();
+      renderStats();
+      document.getElementById('edCardTitle').textContent = payload.title || 'Untitled';
+      showToast('Saved — Week ' + currentWeek, 'success');
+    } catch (err) {
+      showToast('Save failed: ' + err.message, 'error');
+    }
+  }
+
+  /* ── RESET ── */
+  function resetForm() {
+    if (currentWeek) selectWeek(currentWeek);
+  }
+
+  /* ── TOAST ── */
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${type}`;
+    void t.offsetWidth;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  /* ── INIT ── */
+  setupTagInput('kwInput',    'kwWrap',    keywords);
+  setupTagInput('themeInput', 'themeWrap', themes);
+  loadLessons();
+</script>
+</body>
+</html>
