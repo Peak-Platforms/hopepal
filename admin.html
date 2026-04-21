@@ -413,6 +413,52 @@
       .sidebar { position: relative; height: auto; }
       .main { padding: 24px 20px; }
     }
+
+    /* ── HELP ── */
+    #emptyState { max-width: 680px; }
+
+    .help-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .help-item {
+      background: #f7f3ec;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .help-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--red);
+      margin-bottom: 5px;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: var(--mid);
+      line-height: 1.6;
+    }
+
+    .help-steps {
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .help-steps li {
+      font-size: 13px;
+      color: var(--mid);
+      line-height: 1.5;
+      padding-left: 4px;
+    }
+
+    .help-steps li strong { color: var(--dark); }
   </style>
 </head>
 <body>
@@ -533,10 +579,78 @@
 
     </div>
 
-    <div id="emptyState" style="text-align:center;padding:80px 0;color:var(--mid);">
-      <div style="font-size:40px;margin-bottom:16px;">📖</div>
-      <div style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:8px;">Select a week to begin</div>
-      <div style="font-size:13px;">Choose any lesson from the sidebar to edit its content</div>
+    <div id="emptyState">
+
+      <!-- Welcome -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">👋 How to use this page</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--mid);margin-bottom:16px;">
+          Select any week from the sidebar to edit it. Each lesson has five things that matter
+          for the chatbot to work correctly — title, scripture, summary, keywords, and audio.
+          Here is what each one does.
+        </p>
+
+        <div class="help-row">
+          <div class="help-item">
+            <div class="help-label">Title</div>
+            <div class="help-text">The name of the teaching. Shown to the driver when a match is found. Replace the placeholder with your actual doc title.</div>
+          </div>
+          <div class="help-item">
+            <div class="help-label">Scripture</div>
+            <div class="help-text">The primary verse for this week. Shown under the title in the lesson card. Format: Book Chapter:Verse — e.g. <em>Jeremiah 29:11</em>.</div>
+          </div>
+          <div class="help-item">
+            <div class="help-label">Summary</div>
+            <div class="help-text">1–2 sentences describing what this teaching is about. Write it in plain language — this is what the chatbot searches when a driver types a query. The more specific and OTR-relevant, the better the matches.</div>
+          </div>
+          <div class="help-item">
+            <div class="help-label">Keywords</div>
+            <div class="help-text">Specific words a driver might type or say — emotions, situations, OTR life. Type each one and press <strong>Enter</strong>. Examples: <em>lonely, wife, 3am, argument, fired, kids, driveway</em>. These are the primary search layer — add as many as fit.</div>
+          </div>
+          <div class="help-item">
+            <div class="help-label">Themes</div>
+            <div class="help-text">Broader topic categories used as a fallback search. Keep these to 3–5 per lesson. Examples: <em>identity, marriage, faith, purpose, forgiveness</em>.</div>
+          </div>
+          <div class="help-item">
+            <div class="help-label">Audio URL</div>
+            <div class="help-text">The direct track URL from AzuraCast after you upload the .m4a file. In AzuraCast go to Media → click the track → copy the stream/download URL. Paste it here and click Preview to confirm it plays before saving.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workflow -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">🔄 Weekly workflow</div>
+        <ol class="help-steps">
+          <li>Reformat your doc using the NotebookLM template</li>
+          <li>Upload the doc to NotebookLM → generate Audio Overview → download .m4a</li>
+          <li>Upload .m4a to AzuraCast Media library → copy the track URL</li>
+          <li>Open this page → select the week → fill in title, scripture, summary, keywords</li>
+          <li>Paste the AzuraCast URL → click Preview to confirm audio plays</li>
+          <li>Toggle <strong>Publish</strong> to ON → click <strong>Save Changes</strong></li>
+          <li>Green dot appears in the sidebar — lesson is live in the chatbot</li>
+        </ol>
+        <p style="font-size:12px;color:var(--mid);margin-top:14px;">
+          Lessons with <strong>Publish OFF</strong> are invisible to drivers until you turn them on.
+          You can save a half-finished lesson and come back to it.
+        </p>
+      </div>
+
+      <!-- Dots legend -->
+      <div class="card">
+        <div class="card-title">🟢 Sidebar dots</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mid);">
+            <span class="dot published" style="width:10px;height:10px;border-radius:50%;background:#4caf83;flex-shrink:0;"></span>
+            <span><strong style="color:var(--dark)">Green dot</strong> — published and live in the chatbot</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mid);">
+            <span style="width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,0.15);flex-shrink:0;display:inline-block;"></span>
+            <span><strong style="color:var(--dark)">Dim dot</strong> — draft, not visible to drivers yet</span>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </main>
@@ -756,3 +870,4 @@
 </script>
 </body>
 </html>
+
