@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-
+import multer from "multer";
 
 const app  = express();
 const PORT = process.env.PORT || 8080;
@@ -108,6 +108,54 @@ const s3 = new S3Client({
   forcePathStyle: false,
 });
 
+/* ── ELEVENLABS TTS ──────────────────────────────────── */
+app.post("/:client/speak", async (req, res) => {
+  const slug = req.params.client.toLowerCase();
+  const { text } = req.body || {};
+  if (!text?.trim()) return res.status(400).json({ error: "Text required" });
+
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  const voiceId = process.env[`${slug.toUpperCase()}_VOICE_ID`] || process.env.ELEVENLABS_VOICE_ID;
+
+  if (!apiKey || !voiceId) {
+    return res.status(500).json({ error: "ElevenLabs not configured" });
+  }
+
+  try {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key':   apiKey,
+        'Content-Type': 'application/json',
+        'Accept':       'audio/mpeg',
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_turbo_v2',
+        voice_settings: {
+          stability:        0.5,
+          similarity_boost: 0.85,
+          style:            0.3,
+          use_speaker_boost: true,
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error(`[${slug}] ElevenLabs error:`, err);
+      return res.status(500).json({ error: 'TTS failed' });
+    }
+
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'no-store');
+    response.body.pipe(res);
+  } catch (err) {
+    console.error(`[${slug}] ElevenLabs error:`, err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 /* ── UPLOAD AUTH ─────────────────────────────────────── */
 app.post("/:client/upload-auth", (req, res) => {
   const slug = req.params.client.toLowerCase();
@@ -119,29 +167,38 @@ app.post("/:client/upload-auth", (req, res) => {
   return res.json({ success: true, client: slug });
 });
 
+/* ── MULTER (memory storage for file uploads) ────────── */
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 200 * 1024 * 1024 },
+});
+
 /* ── UPLOAD FILE TO SPACES ───────────────────────────── */
-app.post("/:client/upload", express.raw({ type: '*/*', limit: '200mb' }), async (req, res) => {
+app.post("/:client/upload", upload.single('file'), async (req, res) => {
   const slug = req.params.client.toLowerCase();
+
   const password = req.headers["x-upload-password"];
   const expected = process.env[`${slug.toUpperCase()}_UPLOAD_PASSWORD`];
   if (!expected || password !== expected) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  if (!req.body || req.body.length === 0) {
-    return res.status(400).json({ error: "No file received" });
-  }
-  const filename    = req.headers["x-filename"] || `upload-${Date.now()}.m4a`;
-  const contentType = req.headers["content-type"] || "audio/mp4";
+
+  if (!req.file) return res.status(400).json({ error: "No file received" });
+
+  const filename    = req.file.originalname || `upload-${Date.now()}.m4a`;
+  const contentType = req.file.mimetype || "audio/mp4";
   const bucket      = process.env.DO_SPACES_BUCKET || "hopepal";
   const key         = `${slug}/${filename}`;
+
   try {
     await s3.send(new PutObjectCommand({
       Bucket:      bucket,
       Key:         key,
-      Body:        req.body,
+      Body:        req.file.buffer,
       ContentType: contentType,
       ACL:         'public-read',
     }));
+
     const url = `https://${bucket}.sfo3.cdn.digitaloceanspaces.com/${key}`;
     console.log(`[${slug}] Uploaded: ${key}`);
     return res.json({ success: true, url, filename, key });
@@ -405,9 +462,3 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`[HopePal] SMS:   ${process.env.TWILIO_ACCOUNT_SID ? "✅" : "⚠️  not configured"}`);
   console.log(`[HopePal] Email: ${process.env.RESEND_API_KEY    ? "✅" : "⚠️  not configured"}`);
 });
-
-
-
-
-
-
