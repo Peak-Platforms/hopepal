@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import multer from "multer";
 
 const app  = express();
 const PORT = process.env.PORT || 8080;
@@ -108,29 +109,36 @@ app.post("/:client/upload-auth", (req, res) => {
   return res.json({ success: true, client: slug });
 });
 
+/* ── MULTER (memory storage for file uploads) ────────── */
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 200 * 1024 * 1024 },
+});
+
 /* ── UPLOAD FILE TO SPACES ───────────────────────────── */
-app.post("/:client/upload", express.raw({ type: '*/*', limit: '200mb' }), async (req, res) => {
+app.post("/:client/upload", upload.single('file'), async (req, res) => {
   const slug = req.params.client.toLowerCase();
 
-  // Verify password from header
   const password = req.headers["x-upload-password"];
   const expected = process.env[`${slug.toUpperCase()}_UPLOAD_PASSWORD`];
   if (!expected || password !== expected) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const filename    = req.headers["x-filename"] || `upload-${Date.now()}.m4a`;
-  const contentType = req.headers["content-type"] || "audio/mp4";
+  if (!req.file) return res.status(400).json({ error: "No file received" });
+
+  const filename    = req.file.originalname || `upload-${Date.now()}.m4a`;
+  const contentType = req.file.mimetype || "audio/mp4";
   const bucket      = process.env.DO_SPACES_BUCKET || "hopepal";
-  const region      = process.env.DO_SPACES_REGION || "nyc3";
   const key         = `${slug}/${filename}`;
 
   try {
     await s3.send(new PutObjectCommand({
       Bucket:      bucket,
       Key:         key,
-      Body:        req.body,
+      Body:        req.file.buffer,
       ContentType: contentType,
+      ACL:         'public-read',
     }));
 
     const url = `https://${bucket}.sfo3.cdn.digitaloceanspaces.com/${key}`;
@@ -396,6 +404,7 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`[HopePal] SMS:   ${process.env.TWILIO_ACCOUNT_SID ? "✅" : "⚠️  not configured"}`);
   console.log(`[HopePal] Email: ${process.env.RESEND_API_KEY    ? "✅" : "⚠️  not configured"}`);
 });
+
 
 
 
