@@ -149,7 +149,8 @@ app.post("/:client/speak", async (req, res) => {
 
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'no-store');
-    response.body.pipe(res);
+  const audioBuffer = await response.arrayBuffer();
+  res.end(Buffer.from(audioBuffer));
   } catch (err) {
     console.error(`[${slug}] ElevenLabs error:`, err.message);
     return res.status(500).json({ error: err.message });
