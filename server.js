@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import multer from "multer";
+
 
 const app  = express();
 const PORT = process.env.PORT || 8080;
