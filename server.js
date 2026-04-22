@@ -88,12 +88,13 @@ async function notifyReaders(clientSlug, senderName, readerUrl) {
 
 /* ── DIGITAL OCEAN SPACES ────────────────────────────── */
 const s3 = new S3Client({
-  endpoint: `https://${process.env.DO_SPACES_REGION}.digitaloceanspaces.com`,
-  region:   process.env.DO_SPACES_REGION || "nyc3",
+  endpoint: `https://sfo3.digitaloceanspaces.com`,
+  region:   process.env.DO_SPACES_REGION || "sfo3",
   credentials: {
     accessKeyId:     process.env.DO_SPACES_KEY,
     secretAccessKey: process.env.DO_SPACES_SECRET,
   },
+  forcePathStyle: false,
 });
 
 /* ── UPLOAD AUTH ─────────────────────────────────────── */
@@ -132,7 +133,7 @@ app.post("/:client/upload", express.raw({ type: '*/*', limit: '200mb' }), async 
       ContentType: contentType,
     }));
 
-    const url = `https://${bucket}.${region}.cdn.digitaloceanspaces.com/${key}`;
+    const url = `https://${bucket}.sfo3.cdn.digitaloceanspaces.com/${key}`;
     console.log(`[${slug}] Uploaded: ${key}`);
     return res.json({ success: true, url, filename, key });
   } catch (err) {
