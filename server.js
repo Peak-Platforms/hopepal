@@ -168,7 +168,7 @@ app.post("/:client/upload-auth", (req, res) => {
 });
 
 /* ── UPLOAD FILE TO SPACES ───────────────────────────── */
-app.post("/:client/upload", upload.single('file'), async (req, res) => {
+app.post("/:client/upload", express.raw({ type: '*/*', limit: '200mb' }), async (req, res) => {
   const slug = req.params.client.toLowerCase();
 
   const password = req.headers["x-upload-password"];
