@@ -122,29 +122,26 @@ app.post("/:client/upload-auth", (req, res) => {
 /* ── UPLOAD FILE TO SPACES ───────────────────────────── */
 app.post("/:client/upload", express.raw({ type: '*/*', limit: '200mb' }), async (req, res) => {
   const slug = req.params.client.toLowerCase();
-
   const password = req.headers["x-upload-password"];
   const expected = process.env[`${slug.toUpperCase()}_UPLOAD_PASSWORD`];
   if (!expected || password !== expected) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-
-  if (!req.file) return res.status(400).json({ error: "No file received" });
-
-  const filename    = req.file.originalname || `upload-${Date.now()}.m4a`;
-  const contentType = req.file.mimetype || "audio/mp4";
+  if (!req.body || req.body.length === 0) {
+    return res.status(400).json({ error: "No file received" });
+  }
+  const filename    = req.headers["x-filename"] || `upload-${Date.now()}.m4a`;
+  const contentType = req.headers["content-type"] || "audio/mp4";
   const bucket      = process.env.DO_SPACES_BUCKET || "hopepal";
   const key         = `${slug}/${filename}`;
-
   try {
     await s3.send(new PutObjectCommand({
       Bucket:      bucket,
       Key:         key,
-      Body:        req.file.buffer,
+      Body:        req.body,
       ContentType: contentType,
       ACL:         'public-read',
     }));
-
     const url = `https://${bucket}.sfo3.cdn.digitaloceanspaces.com/${key}`;
     console.log(`[${slug}] Uploaded: ${key}`);
     return res.json({ success: true, url, filename, key });
