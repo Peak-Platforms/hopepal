@@ -293,7 +293,7 @@
           if (data.results && data.results.length > 0) {
             const lesson = data.results[0];
          addLessonCard(lesson);
-            setTimeout(() => speak(`I found something that might help — ... ${lesson.title}`), 300);
+            setTimeout(() => speak(`I found something that might help — ... ${lesson.title}`), 500);
             if (data.results.length > 1) addChoices(data.results.slice(1));
           } else {
             speak("I don't have a teaching on that yet — but Sidney does. Use the message panel to reach out.");
