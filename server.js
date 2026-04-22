@@ -19,8 +19,18 @@ app.use((req, res, next) => {
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  if (req.path.includes('/upload') && !req.path.includes('/upload-auth')) {
+    return next();
+  }
+  express.json()(req, res, next);
+});
+app.use((req, res, next) => {
+  if (req.path.includes('/upload') && !req.path.includes('/upload-auth')) {
+    return next();
+  }
+  express.urlencoded({ extended: true })(req, res, next);
+});
 
 /* ── SUPABASE ────────────────────────────────────────── */
 function getSupabase(clientSlug) {
