@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import multer from "multer";
+
 
 const app  = express();
 const PORT = process.env.PORT || 8080;
@@ -165,12 +165,6 @@ app.post("/:client/upload-auth", (req, res) => {
     return res.status(401).json({ error: "Invalid password" });
   }
   return res.json({ success: true, client: slug });
-});
-
-/* ── MULTER (memory storage for file uploads) ────────── */
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 200 * 1024 * 1024 },
 });
 
 /* ── UPLOAD FILE TO SPACES ───────────────────────────── */
