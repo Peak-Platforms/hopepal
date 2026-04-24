@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Patriot Rider Ministries — Connect with Kevin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Lora', serif;
+      background: #0d0f0e;
+      color: #e8e0d0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,15,14,0.97);
+      border-bottom: 2px solid #b22234;
+      padding: 0.9rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      letter-spacing: 0.08em; color: #f0e8d8;
+    }
+    .nav-logo span { color: #b22234; }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    #liveBadge {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.3rem 0.8rem; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.3);
+      display: none;
+    }
+    #liveBadge.live { background: #ff2d2d; color: #fff; box-shadow: 0 0 8px rgba(255,45,45,0.7); }
+    .back-link {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.68rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #6a7a72;
+      text-decoration: none; transition: color 0.2s;
+    }
+    .back-link:hover { color: #b22234; }
+
+    /* ── MAIN LAYOUT ── */
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 0;
+      max-width: 1000px;
+      margin: 2rem auto;
+      width: 100%;
+      padding: 0 1.5rem;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      display: flex; flex-direction: column; gap: 1.2rem;
+      padding-right: 1.5rem;
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* ── LIVE BUTTONS ── */
+    .live-buttons {
+      display: flex; gap: 0.7rem;
+    }
+    .btn-live {
+      flex: 1;
+      background: #b22234; color: white; border: none;
+      padding: 0.75rem 1rem;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.2s;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+    .btn-live:hover { background: #8b1a26; }
+    .btn-donate {
+      flex: 1;
+      background: transparent;
+      border: 1px solid rgba(255,193,7,0.5);
+      color: #ffd54f; padding: 0.75rem 1rem;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.2s;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+    .btn-donate:hover { background: rgba(255,213,79,0.1); border-color: #ffd54f; }
+
+    /* ── AUDIO CARD ── */
+    #xsen-audio-card {
+      display: none;
+      background: #0a0c0b;
+      border: 1px solid rgba(178,34,52,0.3);
+      padding: 1rem;
+    }
+    .audio-header {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: #ff2d2d; margin-bottom: 0.6rem;
+    }
+    #xsenAudio { width: 100%; height: 32px; }
+    #audioStatus {
+      font-size: 0.72rem; color: #4a5a52;
+      margin-top: 0.4rem; text-align: center;
+      font-style: italic;
+    }
+
+    /* ── MESSAGE PANEL ── */
+    .message-panel {
+      background: #111412;
+      border: 1px solid rgba(255,255,255,0.07);
+      padding: 1.5rem;
+      position: relative;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    }
+    .message-panel::before {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: linear-gradient(to bottom, #b22234, transparent);
+    }
+    .panel-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: #b22234; margin-bottom: 1rem;
+      padding-bottom: 0.7rem;
+      border-bottom: 1px solid rgba(178,34,52,0.2);
+    }
+    .encryption-banner {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(0,230,118,0.06);
+      border: 1px solid rgba(0,230,118,0.15);
+      padding: 0.5rem 0.8rem;
+      margin-bottom: 1rem;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.6rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: #00e676;
+    }
+    .panel-hint {
+      font-size: 0.78rem; color: #5a6a62;
+      font-style: italic; line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .form-group { margin-bottom: 0.9rem; }
+    .form-label {
+      display: block;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.6rem; font-weight: 400;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: #6a7a72; margin-bottom: 0.35rem;
+    }
+    .form-input, .form-textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #e8e0d0;
+      padding: 0.7rem 0.9rem;
+      font-family: 'Lora', serif; font-size: 0.88rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus { border-color: rgba(178,34,52,0.5); }
+    .form-input::placeholder, .form-textarea::placeholder { color: rgba(255,255,255,0.18); }
+    .form-textarea { resize: vertical; min-height: 90px; }
+    .send-btn {
+      width: 100%; margin-top: 0.3rem;
+      background: #b22234; color: white; border: none;
+      padding: 0.85rem;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.75rem; font-weight: 500;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.2s;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+    .send-btn:hover { background: #8b1a26; }
+    #fanMessageStatus {
+      font-size: 0.78rem; color: #6a7a72;
+      font-style: italic; margin-top: 0.6rem;
+      text-align: center; min-height: 1.2rem;
+    }
+
+    /* ── RIGHT PANEL — CHAT ── */
+    .right-panel {
+      display: flex; flex-direction: column;
+      padding-left: 1.5rem;
+      height: calc(100vh - 140px);
+      min-height: 500px;
+    }
+
+    .chat-label {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.68rem; font-weight: 400;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: #b22234; margin-bottom: 0.8rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .chat-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: rgba(178,34,52,0.2);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 0.8rem;
+      padding-right: 0.3rem;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(178,34,52,0.3) transparent;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(178,34,52,0.3); border-radius: 2px; }
+
+    .message {
+      padding: 0.75rem 1rem;
+      font-size: 0.88rem; line-height: 1.65;
+      max-width: 88%;
+    }
+    .message.bot {
+      background: #161a18;
+      border: 1px solid rgba(255,255,255,0.07);
+      color: #a0a890;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+    }
+    .message.user {
+      background: #b22234;
+      color: #fff;
+      margin-left: auto;
+      clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px);
+    }
+
+    /* ── LESSON CARD ── */
+    .lesson-card {
+      background: #0d0f0e;
+      border: 1px solid rgba(178,34,52,0.25);
+      border-left: 3px solid #b22234;
+      padding: 1rem; max-width: 92%;
+      font-size: 0.84rem;
+    }
+    .lesson-week {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: #b22234; margin-bottom: 0.3rem;
+    }
+    .lesson-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1rem; font-weight: 600;
+      color: #f0e8d8; margin-bottom: 0.3rem;
+    }
+    .lesson-scripture { font-size: 0.78rem; color: #6a7a72; font-style: italic; margin-bottom: 0.6rem; }
+    .lesson-summary { font-size: 0.82rem; color: #8a9a82; line-height: 1.6; margin-bottom: 0.7rem; }
+    .lesson-card iframe { border-radius: 4px; }
+    .lesson-duration { font-size: 0.68rem; color: #4a5a52; margin-top: 0.3rem; text-align: right; }
+    .lesson-coming { font-size: 0.75rem; color: #4a5a52; margin-top: 0.5rem; text-align: center; font-style: italic; }
+
+    .lesson-choices { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.6rem; }
+    .lesson-choice-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: #8a9a82; padding: 0.5rem 0.8rem;
+      font-family: 'Lora', serif; font-size: 0.82rem;
+      cursor: pointer; text-align: left;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .lesson-choice-btn:hover { border-color: #b22234; color: #e8e0d0; }
+
+    /* ── CHAT INPUT ── */
+    .chat-input-wrap {
+      display: flex; gap: 0; margin-top: 1rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: border-color 0.2s;
+    }
+    .chat-input-wrap:focus-within { border-color: rgba(178,34,52,0.4); }
+    #micBtn {
+      background: #161a18; border: none;
+      color: #b22234; font-size: 1.1rem;
+      padding: 0 0.9rem; cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    #micBtn:hover { background: #1e2420; }
+    #micBtn.listening { animation: pulse 0.8s infinite alternate; color: #ff2d2d; }
+    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
+    #userInput {
+      flex: 1; background: #161a18; border: none;
+      color: #e8e0d0; padding: 0.8rem 0.8rem;
+      font-family: 'Lora', serif; font-size: 0.88rem;
+      outline: none;
+    }
+    #userInput::placeholder { color: rgba(255,255,255,0.2); }
+    #submitBtn {
+      background: #b22234; color: white; border: none;
+      padding: 0 1.2rem; font-size: 1rem;
+      cursor: pointer; transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    #submitBtn:hover { background: #8b1a26; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #080a09;
+      border-top: 1px solid rgba(178,34,52,0.2);
+      padding: 1rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 0.5rem;
+    }
+    footer p { font-size: 0.7rem; color: rgba(255,255,255,0.2); }
+    footer a { color: rgba(178,34,52,0.5); text-decoration: none; transition: color 0.2s; }
+    footer a:hover { color: #b22234; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 720px) {
+      .main { grid-template-columns: 1fr; padding: 0 1rem; gap: 1.5rem; }
+      .left-panel { padding-right: 0; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 1.5rem; }
+      .right-panel { padding-left: 0; height: 60vh; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">PATRIOT <span>RIDER</span> MINISTRIES</div>
+    <div class="nav-right">
+      <span id="liveBadge"></span>
+      <a href="/prm/index.html" class="back-link">← Ministry Home</a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LEFT: CONTROLS + MESSAGE FORM -->
+    <div class="left-panel">
+
+      <div class="live-buttons">
+        <button class="btn-live" id="listenLiveBtn">🔴 Listen Live</button>
+        <button class="btn-donate" id="donateBtn">❤️ Support PRM</button>
+      </div>
+
+      <div id="xsen-audio-card">
+        <div class="audio-header">🔴 PRM Live Broadcast</div>
+        <audio id="xsenAudio" preload="none" playsinline controls>
+          <source src="" type="audio/mpeg"/>
+        </audio>
+        <div id="audioStatus">Tap ▶ to listen live</div>
+      </div>
+
+      <div class="message-panel">
+        <div class="panel-title">📡 Message Kevin — 24/7</div>
+        <div class="encryption-banner">
+          <span>🔐</span>
+          <span>AES-256 Encrypted · Direct to Kevin</span>
+        </div>
+        <p class="panel-hint">Prayer request, question about PRM or Freedom Ranch, or just reaching out — Kevin reads every message personally. Rider to rider.</p>
+
+        <div class="form-group">
+          <label class="form-label">Your Name (optional)</label>
+          <input type="text" id="fanName" class="form-input" placeholder="Name or handle"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message</label>
+          <textarea id="fanMessage" class="form-textarea" placeholder="What's on your heart? Kevin reads every message…"></textarea>
+        </div>
+        <button class="send-btn" id="sendFanMessage">Send Message →</button>
+        <div id="fanMessageStatus"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: CHAT -->
+    <div class="right-panel">
+      <div class="chat-label">Ministry Teaching Search</div>
+
+      <div class="chat-messages" id="messages">
+        <div class="message bot">
+          👋 Welcome to Patriot Rider Ministries! Type a keyword — like "purpose", "brotherhood", "ptsd", "faith", or "freedom" — and I'll find a teaching that fits. Or use the panel to message Kevin directly. Ride with purpose. 🏍️
+        </div>
+      </div>
+
+      <div class="chat-input-wrap">
+        <button id="micBtn" type="button" title="Tap to speak">🎤</button>
+        <input type="text" id="userInput" placeholder="What's on your mind?" autocomplete="off"/>
+        <button id="submitBtn" type="button">➤</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 Patriot Rider Ministries · Incorporated Nonprofit · 501(c)(3) Pending</p>
+    <p>Powered by <a href="https://hopepal.life" target="_blank">HopePal</a> · A <a href="https://peak-platforms.com" target="_blank">Peak Platforms</a> ministry tool</p>
+  </footer>
+
+  <script>
+    const BASE_URL          = 'https://hopepal-production.up.railway.app';
+    const CLIENT            = 'prm';
+    const LIVE_AUDIO_STREAM = 'https://stream.xsen.fun/listen/prm/radio.mp3';
+    const DONATE_URL        = 'https://hopepal.life/prm/index.html';
+
+    function getRiderToken() {
+      let t = localStorage.getItem('hopepal_rider_token');
+      if (!t) { t = 'rdr_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,10); localStorage.setItem('hopepal_rider_token', t); }
+      return t;
+    }
+    const RIDER_TOKEN = getRiderToken();
+
+    const AES_KEY_B64 = 'fF/Gx3ZKFqD4KZTAo5wyu55dledR7EMTitZeeF36Pgg=';
+    async function getKey(mode) {
+      const raw = Uint8Array.from(atob(AES_KEY_B64), c => c.charCodeAt(0));
+      return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, [mode]);
+    }
+    async function encryptMessage(text) {
+      const key = await getKey('encrypt');
+      const iv  = crypto.getRandomValues(new Uint8Array(12));
+      const ct  = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, new TextEncoder().encode(text));
+      const out = new Uint8Array(12 + ct.byteLength);
+      out.set(iv); out.set(new Uint8Array(ct), 12);
+      return btoa(String.fromCharCode(...out));
+    }
+    async function decryptMessage(b64) {
+      try {
+        const buf = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const plain = await crypto.subtle.decrypt({ name:'AES-GCM', iv: buf.slice(0,12) }, await getKey('decrypt'), buf.slice(12));
+        return new TextDecoder().decode(plain);
+      } catch(e) { return null; }
+    }
+
+    let currentAudio = null;
+    async function speak(text) {
+      if (!text) return;
+      try {
+        if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+        const res = await fetch(`${BASE_URL}/${CLIENT}/speak`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text}) });
+        if (!res.ok) return;
+        const url = URL.createObjectURL(await res.blob());
+        currentAudio = new Audio(url);
+        currentAudio.play();
+        currentAudio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; };
+      } catch(e) {}
+    }
+
+    function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const messages      = document.getElementById('messages');
+      const liveBadge     = document.getElementById('liveBadge');
+      const audioCard     = document.getElementById('xsen-audio-card');
+      const audioEl       = document.getElementById('xsenAudio');
+      const audioStatus   = document.getElementById('audioStatus');
+      const listenLiveBtn = document.getElementById('listenLiveBtn');
+      const donateBtn     = document.getElementById('donateBtn');
+      const fanNameInput  = document.getElementById('fanName');
+      const fanMsgInput   = document.getElementById('fanMessage');
+      const sendFanMsgBtn = document.getElementById('sendFanMessage');
+      const fanMsgStatus  = document.getElementById('fanMessageStatus');
+      const userInput     = document.getElementById('userInput');
+      const submitBtn     = document.getElementById('submitBtn');
+      const micBtn        = document.getElementById('micBtn');
+
+      function addMsg(text, sender) {
+        const div = document.createElement('div');
+        div.className = `message ${sender}`;
+        div.textContent = text;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+        return div;
+      }
+
+      function addLessonCard(lesson) {
+        const div = document.createElement('div');
+        div.className = 'message bot lesson-card';
+        const mins = lesson.duration_seconds ? Math.round(lesson.duration_seconds / 60) : null;
+        div.innerHTML = `
+          <div class="lesson-week">Week ${lesson.week}</div>
+          <div class="lesson-title">${escHtml(lesson.title)}</div>
+          ${lesson.scripture ? `<div class="lesson-scripture">📖 ${escHtml(lesson.scripture)}</div>` : ''}
+          <div class="lesson-summary">${escHtml(lesson.summary)}</div>
+          ${lesson.audio_url
+            ? `<iframe src="${lesson.audio_url}" style="width:100%;height:80px;border:none;border-radius:4px;margin-top:6px;" allow=""></iframe>
+               ${mins ? `<div class="lesson-duration">⏱ ${mins} min</div>` : ''}`
+            : `<div class="lesson-coming">🎙 Audio coming soon — message Kevin for this teaching</div>`}
+        `;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function addChoices(results) {
+        if (!results.length) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'message bot';
+        wrapper.innerHTML = '<div style="font-size:0.78rem;color:#6a7a72;margin-bottom:0.5rem;font-style:italic;">These might also fit:</div>';
+        const choices = document.createElement('div');
+        choices.className = 'lesson-choices';
+        results.forEach(r => {
+          const btn = document.createElement('button');
+          btn.className = 'lesson-choice-btn';
+          btn.textContent = `Week ${r.week} — ${r.title}`;
+          btn.addEventListener('click', () => { speak(`Here is ${r.title}`); addLessonCard(r); wrapper.remove(); });
+          choices.appendChild(btn);
+        });
+        wrapper.appendChild(choices);
+        messages.appendChild(wrapper);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      async function handleQuery(text) {
+        if (!text.trim()) return;
+        addMsg(text, 'user');
+        userInput.value = '';
+        const typing = addMsg('…', 'bot');
+        try {
+          const res  = await fetch(`${BASE_URL}/${CLIENT}/lessons/search`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query:text}) });
+          const data = await res.json();
+          typing.remove();
+          if (data.results && data.results.length > 0) {
+            addLessonCard(data.results[0]);
+            setTimeout(() => speak(`I found something that might help — ${data.results[0].title}`), 900);
+            if (data.results.length > 1) addChoices(data.results.slice(1));
+          } else {
+            speak("Kevin doesn't have a teaching on that yet — reach out to him directly.");
+            addMsg("Kevin doesn't have a teaching on that yet 🙏 — use the message panel to reach him directly. Rider to rider.", 'bot');
+          }
+        } catch(err) {
+          typing.remove();
+          addMsg('🙏 Something went wrong — use the message panel to reach Kevin directly.', 'bot');
+        }
+      }
+
+      submitBtn.addEventListener('click', () => handleQuery(userInput.value.trim()));
+      userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleQuery(userInput.value.trim()); });
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      let recognition = null;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false; recognition.interimResults = false; recognition.lang = 'en-US';
+        recognition.onresult = (e) => handleQuery(e.results[0][0].transcript);
+        recognition.onerror  = () => { micBtn.textContent = '🎤'; micBtn.classList.remove('listening'); };
+        recognition.onend    = () => { micBtn.textContent = '🎤'; micBtn.classList.remove('listening'); };
+      } else { micBtn.style.opacity = '0.3'; micBtn.title = 'Voice not supported'; }
+
+      micBtn.addEventListener('click', () => {
+        if (!recognition) return;
+        micBtn.textContent = '🔴'; micBtn.classList.add('listening');
+        try { recognition.start(); } catch(e) {}
+      });
+
+      sendFanMsgBtn.addEventListener('click', async () => {
+        const name = fanNameInput.value.trim();
+        const msg  = fanMsgInput.value.trim();
+        if (!msg) { fanMsgStatus.textContent = 'Please enter a message.'; return; }
+        fanMsgStatus.textContent = 'Encrypting & sending…';
+        try {
+          const encrypted = await encryptMessage(msg);
+          const res = await fetch(`${BASE_URL}/${CLIENT}/ministry-message`, {
+            method: 'POST',
+            body: new URLSearchParams({ name: name || 'Anonymous Rider', message: encrypted, source: 'Patriot Rider Ministries', driver_token: RIDER_TOKEN })
+          });
+          if (!res.ok) throw new Error();
+          fanMsgStatus.textContent = '✅ Message received — Kevin will be in touch. Ride safe!';
+          fanMsgInput.value = '';
+        } catch(e) {
+          fanMsgStatus.textContent = '❌ Could not send. Please try again.';
+        }
+      });
+
+      let lastReplyId = localStorage.getItem('hopepal_prm_last_reply') || null;
+      async function pollReplies() {
+        try {
+          const res  = await fetch(`${BASE_URL}/${CLIENT}/replies?token=${encodeURIComponent(RIDER_TOKEN)}`, { cache:'no-store' });
+          const data = await res.json();
+          if (!data.replies || !data.replies.length) return;
+          for (const r of data.replies) {
+            if (r.id === lastReplyId) break;
+            const text = await decryptMessage(r.reply) || r.reply;
+            const div  = document.createElement('div');
+            div.className = 'message bot';
+            div.innerHTML = `<span style="font-size:0.68rem;opacity:0.5;display:block;margin-bottom:0.3rem;font-family:'Oswald',sans-serif;letter-spacing:0.1em;text-transform:uppercase;">💬 ${r.reader_name || 'Kevin — PRM'}</span>${escHtml(text)}`;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            speak(`You have a reply from ${r.reader_name || 'Kevin'}`);
+          }
+          lastReplyId = data.replies[data.replies.length - 1].id;
+          localStorage.setItem('hopepal_prm_last_reply', lastReplyId);
+        } catch(e) {}
+      }
+      pollReplies();
+      setInterval(pollReplies, 30000);
+
+      function playAudio() {
+        audioCard.style.display = 'block';
+        audioEl.src = `${LIVE_AUDIO_STREAM}?ts=${Date.now()}`;
+        audioEl.play().then(() => { audioStatus.textContent = '🔊 PRM live broadcast playing'; }).catch(() => { audioStatus.textContent = 'Tap ▶ to start audio'; });
+      }
+      listenLiveBtn.addEventListener('click', () => { addMsg('🔴 Connecting to PRM live broadcast…', 'bot'); playAudio(); });
+      donateBtn.addEventListener('click', () => window.open(DONATE_URL, '_blank', 'noopener'));
+
+      async function updateLiveStatus() {
+        try {
+          const res  = await fetch(`${BASE_URL}/${CLIENT}/live-status`, { cache:'no-store' });
+          const data = await res.json();
+          if (data.isLive) {
+            liveBadge.textContent = '🔴 LIVE'; liveBadge.className = 'live-badge live'; liveBadge.style.display = '';
+          } else { liveBadge.style.display = 'none'; }
+        } catch(e) {}
+      }
+      updateLiveStatus();
+      setInterval(updateLiveStatus, 20000);
+    });
+  </script>
+</body>
+</html>

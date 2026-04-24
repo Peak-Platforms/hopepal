@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PRM Lesson Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { font-family: 'Lora', serif; background: #0a0c0b; color: #e0d8c8; min-height: 100vh; }
+
+  /* LOGIN */
+  .login-wrap {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 2rem;
+  }
+  .login-card {
+    background: #111412; border: 1px solid rgba(255,255,255,0.08);
+    padding: 3rem; width: 100%; max-width: 380px;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+  .login-card::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 4px; height: 100%; background: #b22234;
+  }
+  .login-title {
+    font-family: 'Oswald', sans-serif; font-size: 1.5rem;
+    font-weight: 600; color: #f0e8d8; margin-bottom: 0.3rem;
+  }
+  .login-sub { font-size: 0.82rem; font-style: italic; color: #6a7a72; margin-bottom: 2rem; }
+  .login-card input {
+    width: 100%; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1); color: #e8e0d0;
+    padding: 0.8rem 1rem; font-family: 'Lora', serif;
+    font-size: 0.9rem; outline: none; margin-bottom: 1rem;
+    transition: border-color 0.2s;
+  }
+  .login-card input:focus { border-color: rgba(178,34,52,0.5); }
+  .login-btn {
+    width: 100%; background: #b22234; color: white; border: none;
+    padding: 0.9rem; font-family: 'Oswald', sans-serif;
+    font-size: 0.8rem; font-weight: 500; letter-spacing: 0.15em;
+    text-transform: uppercase; cursor: pointer; transition: background 0.2s;
+  }
+  .login-btn:hover { background: #8b1a26; }
+  .login-error { color: #b22234; font-size: 0.8rem; margin-top: 0.8rem; display: none; }
+
+  /* HEADER */
+  header {
+    background: #0d0f0e; border-bottom: 2px solid #b22234;
+    padding: 1rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-logo {
+    font-family: 'Oswald', sans-serif; font-size: 1rem;
+    font-weight: 700; letter-spacing: 0.08em; color: #f0e8d8;
+  }
+  .header-logo span { color: #b22234; }
+  .header-meta { font-size: 0.72rem; color: #4a5a52; font-style: italic; }
+
+  /* ADMIN WRAP */
+  .admin-wrap { display: none; }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: #0d0f0e; border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 0.8rem 2rem;
+    display: flex; gap: 2rem; align-items: center;
+  }
+  .stat-item { display: flex; align-items: center; gap: 0.5rem; }
+  .stat-num {
+    font-family: 'Oswald', sans-serif; font-size: 1.3rem;
+    font-weight: 600; color: #f0e8d8;
+  }
+  .stat-num.green { color: #4caf50; }
+  .stat-label { font-size: 0.72rem; color: #4a5a52; text-transform: uppercase; letter-spacing: 0.1em; }
+  .stat-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.08); }
+
+  /* MAIN GRID */
+  .admin-main {
+    display: grid; grid-template-columns: 280px 1fr;
+    height: calc(100vh - 105px);
+  }
+
+  /* LEFT — LESSON LIST */
+  .lesson-list {
+    background: #0d0f0e; border-right: 1px solid rgba(255,255,255,0.06);
+    overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: rgba(178,34,52,0.3) transparent;
+  }
+  .lesson-list::-webkit-scrollbar { width: 4px; }
+  .lesson-list::-webkit-scrollbar-thumb { background: rgba(178,34,52,0.3); }
+
+  .quarter-label {
+    font-family: 'Oswald', sans-serif; font-size: 0.62rem;
+    font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+    color: #b22234; padding: 1rem 1.2rem 0.4rem;
+    border-top: 1px solid rgba(178,34,52,0.15);
+    position: sticky; top: 0; background: #0d0f0e; z-index: 2;
+  }
+  .quarter-label:first-child { border-top: none; }
+
+  .lesson-btn {
+    width: 100%; background: none; border: none;
+    text-align: left; padding: 0.7rem 1.2rem;
+    cursor: pointer; transition: background 0.15s;
+    display: flex; align-items: center; gap: 0.7rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .lesson-btn:hover { background: rgba(255,255,255,0.04); }
+  .lesson-btn.active { background: rgba(178,34,52,0.12); border-left: 3px solid #b22234; }
+
+  .week-num {
+    font-family: 'Oswald', sans-serif; font-size: 0.68rem;
+    color: #4a5a52; min-width: 28px;
+  }
+  .lesson-btn-title {
+    font-size: 0.8rem; color: #a0a890; line-height: 1.3; flex: 1;
+  }
+  .lesson-btn.active .lesson-btn-title { color: #f0e8d8; }
+
+  .pub-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
+  .pub-dot.published { background: #4caf50; }
+  .pub-dot.unpublished { background: #3a3a3a; }
+
+  /* RIGHT — EDITOR */
+  .lesson-editor {
+    overflow-y: auto; padding: 2.5rem;
+    background: #0a0c0b;
+  }
+
+  .editor-empty {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100%; color: #3a4a42; text-align: center;
+  }
+  .editor-empty .icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+  .editor-empty p { font-style: italic; font-size: 0.9rem; }
+
+  .editor-content { max-width: 700px; }
+
+  .editor-week {
+    font-family: 'Oswald', sans-serif; font-size: 0.68rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: #b22234; margin-bottom: 0.5rem;
+  }
+  .editor-title {
+    font-family: 'Oswald', sans-serif; font-size: 1.8rem;
+    font-weight: 600; color: #f0e8d8; line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+  .editor-scripture {
+    font-size: 0.85rem; font-style: italic; color: #6a7a72;
+    margin-bottom: 1.5rem; padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .editor-summary {
+    font-size: 0.9rem; line-height: 1.85; color: #8a9a82;
+    margin-bottom: 2rem;
+    padding: 1.2rem; background: #111412;
+    border-left: 3px solid rgba(178,34,52,0.3);
+  }
+
+  .keywords-wrap {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+    margin-bottom: 2rem;
+  }
+  .keyword-tag {
+    background: rgba(178,34,52,0.1); border: 1px solid rgba(178,34,52,0.2);
+    color: #b22234; padding: 0.2rem 0.6rem;
+    font-family: 'Oswald', sans-serif; font-size: 0.62rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .form-section { margin-bottom: 2rem; }
+  .form-section-label {
+    font-family: 'Oswald', sans-serif; font-size: 0.65rem;
+    font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase;
+    color: #6a7a72; margin-bottom: 0.6rem; display: block;
+  }
+  .form-input {
+    width: 100%; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1); color: #e8e0d0;
+    padding: 0.8rem 1rem; font-family: 'Lora', serif; font-size: 0.9rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: rgba(178,34,52,0.5); }
+  .form-input::placeholder { color: rgba(255,255,255,0.2); }
+
+  .duration-row { display: flex; gap: 1rem; align-items: flex-end; }
+  .duration-row .form-input { flex: 1; }
+
+  /* PUBLISHED TOGGLE */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #111412; border: 1px solid rgba(255,255,255,0.07);
+    padding: 1rem 1.2rem; margin-bottom: 2rem;
+  }
+  .toggle-label {
+    font-family: 'Oswald', sans-serif; font-size: 0.78rem;
+    font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #a0a890;
+  }
+  .toggle-label small { display: block; font-family: 'Lora', serif; font-size: 0.72rem; font-weight: 400; color: #4a5a52; letter-spacing: 0; text-transform: none; margin-top: 0.2rem; }
+  .toggle {
+    position: relative; width: 48px; height: 26px;
+    background: #2a3a32; border-radius: 13px;
+    cursor: pointer; transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: #4caf50; }
+  .toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px; background: white;
+    border-radius: 50%; transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(22px); }
+
+  /* AUDIO PREVIEW */
+  .audio-preview {
+    display: none; background: #0d0f0e;
+    border: 1px solid rgba(178,34,52,0.2);
+    padding: 1rem; margin-top: 0.8rem;
+  }
+  .audio-preview audio { width: 100%; height: 32px; }
+
+  /* SAVE BTN */
+  .save-btn {
+    background: #b22234; color: white; border: none;
+    padding: 0.9rem 2.5rem;
+    font-family: 'Oswald', sans-serif; font-size: 0.78rem;
+    font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .save-btn:hover { background: #8b1a26; }
+  .save-btn:disabled { background: #3a3a3a; cursor: not-allowed; }
+
+  .save-status {
+    font-size: 0.78rem; font-style: italic; color: #6a7a72;
+    margin-left: 1rem; display: inline-block;
+  }
+
+  @media (max-width: 700px) {
+    .admin-main { grid-template-columns: 1fr; }
+    .lesson-list { height: 200px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .lesson-editor { padding: 1.5rem; }
+    .stats-bar { gap: 1rem; flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <h2 class="login-title">PRM Lesson Admin</h2>
+    <p class="login-sub">Patriot Rider Ministries — Private</p>
+    <input type="password" id="pass-input" placeholder="Access code" onkeydown="if(event.key==='Enter') login()"/>
+    <button class="login-btn" onclick="login()">Enter Admin →</button>
+    <p class="login-error" id="login-error">Incorrect access code.</p>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-wrap" id="admin-wrap">
+
+  <header>
+    <div class="header-logo">PATRIOT <span>RIDER</span> MINISTRIES — Lesson Admin</div>
+    <div class="header-meta">52 weeks · motorcyclists</div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num" id="stat-total">52</div>
+      <div class="stat-label">Total Lessons</div>
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat-item">
+      <div class="stat-num green" id="stat-published">0</div>
+      <div class="stat-label">Published</div>
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-audio">0</div>
+      <div class="stat-label">With Audio</div>
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-remaining">52</div>
+      <div class="stat-label">Remaining</div>
+    </div>
+  </div>
+
+  <div class="admin-main">
+
+    <!-- LESSON LIST -->
+    <div class="lesson-list" id="lesson-list">
+      <div style="padding:2rem;text-align:center;color:#3a4a42;font-style:italic;font-size:0.85rem;">Loading lessons…</div>
+    </div>
+
+    <!-- EDITOR -->
+    <div class="lesson-editor" id="lesson-editor">
+      <div class="editor-empty">
+        <div class="icon">🏍️</div>
+        <p>Select a lesson from the list<br/>to edit its audio and publish status.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────────
+  const SUPABASE_URL      = 'https://ggvtxauxjkixszvyirsl.supabase.co';
+  const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE'; // replace with anon key from Supabase → Settings → API
+  const ACCESS_CODE       = 'prm2026';             // change to your preferred admin password
+  const CLIENT            = 'prm';
+
+  const QUARTERS = [
+    { label: '🏍️ Identity — Who You Are Off the Bike', weeks: [1,2,3,4,5,6,7,8,9,10,11,12,13] },
+    { label: '🤝 Brotherhood — Community, Loyalty, Loss', weeks: [14,15,16,17,18,19,20,21,22,23,24,25,26] },
+    { label: '🎯 Purpose — Why You Ride', weeks: [27,28,29,30,31,32,33,34,35,36,37,38,39] },
+    { label: '🌑 Faith in Dark — Doubt, Grief, Perseverance', weeks: [40,41,42,43,44,45,46,47,48,49,50,51,52] }
+  ];
+
+  let lessons = [];
+  let currentLesson = null;
+
+  // ── AUTH ─────────────────────────────────────────────────────
+  function login() {
+    if (document.getElementById('pass-input').value === ACCESS_CODE) {
+      document.getElementById('login-wrap').style.display = 'none';
+      document.getElementById('admin-wrap').style.display = 'block';
+      loadLessons();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+
+  // ── SUPABASE ─────────────────────────────────────────────────
+  async function supaFetch(path, opts = {}) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      ...opts,
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+        ...(opts.headers || {})
+      }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json().catch(() => null);
+  }
+
+  async function loadLessons() {
+    try {
+      const data = await supaFetch(`lessons?client=eq.${CLIENT}&order=week.asc&select=*`);
+      lessons = data || [];
+      renderList();
+      updateStats();
+    } catch (e) {
+      document.getElementById('lesson-list').innerHTML =
+        `<div style="padding:1.5rem;color:#b22234;font-size:0.82rem;">Error loading lessons: ${e.message}<br/><br/>Check your SUPABASE_ANON_KEY in the HTML.</div>`;
+    }
+  }
+
+  // ── RENDER LIST ───────────────────────────────────────────────
+  function renderList() {
+    const list = document.getElementById('lesson-list');
+    list.innerHTML = '';
+
+    QUARTERS.forEach(q => {
+      const label = document.createElement('div');
+      label.className = 'quarter-label';
+      label.textContent = q.label;
+      list.appendChild(label);
+
+      q.weeks.forEach(wk => {
+        const lesson = lessons.find(l => l.week === wk);
+        if (!lesson) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'lesson-btn' + (currentLesson?.id === lesson.id ? ' active' : '');
+        btn.innerHTML = `
+          <span class="week-num">W${lesson.week}</span>
+          <span class="lesson-btn-title">${lesson.title}</span>
+          <span class="pub-dot ${lesson.published ? 'published' : 'unpublished'}"></span>
+        `;
+        btn.onclick = () => selectLesson(lesson);
+        list.appendChild(btn);
+      });
+    });
+  }
+
+  // ── STATS ─────────────────────────────────────────────────────
+  function updateStats() {
+    const published = lessons.filter(l => l.published).length;
+    const withAudio = lessons.filter(l => l.audio_url).length;
+    document.getElementById('stat-total').textContent     = lessons.length;
+    document.getElementById('stat-published').textContent = published;
+    document.getElementById('stat-audio').textContent     = withAudio;
+    document.getElementById('stat-remaining').textContent = lessons.length - published;
+  }
+
+  // ── SELECT LESSON ─────────────────────────────────────────────
+  function selectLesson(lesson) {
+    currentLesson = lesson;
+    renderList();
+
+    const editor = document.getElementById('lesson-editor');
+    const keywords = [...(lesson.keywords || []), ...(lesson.themes || [])];
+
+    editor.innerHTML = `
+      <div class="editor-content">
+        <div class="editor-week">Week ${lesson.week} of 52 · Patriot Rider Ministries</div>
+        <div class="editor-title">${lesson.title}</div>
+        <div class="editor-scripture">📖 ${lesson.scripture || 'No scripture set'}</div>
+        <div class="editor-summary">${lesson.summary || ''}</div>
+
+        <div class="keywords-wrap">
+          ${keywords.map(k => `<span class="keyword-tag">${k}</span>`).join('')}
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-label">
+            Published
+            <small>Visible to riders in the app chatbot</small>
+          </div>
+          <div class="toggle ${lesson.published ? 'on' : ''}" id="pub-toggle" onclick="togglePublished()"></div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-section-label">AzuraCast Audio URL</label>
+          <input type="url" class="form-input" id="audio-url-input"
+            placeholder="https://stream.xsen.fun/listen/prm/..."
+            value="${lesson.audio_url || ''}"
+            oninput="previewAudio()"/>
+          <div class="audio-preview" id="audio-preview">
+            <audio controls id="audio-player">
+              <source src="" type="audio/mpeg"/>
+            </audio>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-section-label">Duration (seconds, optional)</label>
+          <div class="duration-row">
+            <input type="number" class="form-input" id="duration-input"
+              placeholder="e.g. 1800 for 30 min"
+              value="${lesson.duration_seconds || ''}"/>
+          </div>
+        </div>
+
+        <div>
+          <button class="save-btn" id="save-btn" onclick="saveLesson()">Save Lesson</button>
+          <span class="save-status" id="save-status"></span>
+        </div>
+      </div>
+    `;
+
+    previewAudio();
+  }
+
+  // ── TOGGLE PUBLISHED ──────────────────────────────────────────
+  function togglePublished() {
+    const toggle = document.getElementById('pub-toggle');
+    toggle.classList.toggle('on');
+  }
+
+  // ── AUDIO PREVIEW ─────────────────────────────────────────────
+  function previewAudio() {
+    const url = document.getElementById('audio-url-input')?.value?.trim();
+    const preview = document.getElementById('audio-preview');
+    const player  = document.getElementById('audio-player');
+    if (!preview || !player) return;
+    if (url) {
+      preview.style.display = 'block';
+      player.src = url;
+    } else {
+      preview.style.display = 'none';
+    }
+  }
+
+  // ── SAVE ──────────────────────────────────────────────────────
+  async function saveLesson() {
+    if (!currentLesson) return;
+
+    const btn        = document.getElementById('save-btn');
+    const status     = document.getElementById('save-status');
+    const audioUrl   = document.getElementById('audio-url-input')?.value?.trim() || null;
+    const duration   = parseInt(document.getElementById('duration-input')?.value) || null;
+    const published  = document.getElementById('pub-toggle')?.classList.contains('on') || false;
+
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    status.textContent = '';
+
+    try {
+      await supaFetch(
+        `lessons?id=eq.${currentLesson.id}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ audio_url: audioUrl, duration_seconds: duration, published })
+        }
+      );
+
+      // Update local state
+      currentLesson.audio_url        = audioUrl;
+      currentLesson.duration_seconds = duration;
+      currentLesson.published        = published;
+      const idx = lessons.findIndex(l => l.id === currentLesson.id);
+      if (idx > -1) lessons[idx] = { ...currentLesson };
+
+      renderList();
+      updateStats();
+      status.textContent = '✓ Saved';
+      status.style.color = '#4caf50';
+      setTimeout(() => { status.textContent = ''; }, 3000);
+
+    } catch (e) {
+      status.textContent = '✗ Save failed: ' + e.message;
+      status.style.color = '#b22234';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Save Lesson';
+  }
+</script>
+</body>
+</html>
