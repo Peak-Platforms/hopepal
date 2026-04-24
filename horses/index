@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kinship Equine Therapy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --sage: #7a9e7e;
+    --sage-light: #a8c5ac;
+    --sage-pale: #e8f0e9;
+    --cream: #faf6ef;
+    --warm-white: #fdf9f4;
+    --earth: #8b6f4e;
+    --earth-light: #b89a7a;
+    --earth-pale: #f0e8dc;
+    --text-dark: #2e3028;
+    --text-mid: #5a5a4a;
+    --text-light: #8a8a7a;
+    --gold: #c9a84c;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Jost', sans-serif;
+    background: var(--warm-white);
+    color: var(--text-dark);
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 3rem;
+    background: rgba(250,246,239,0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(122,158,126,0.2);
+    transition: box-shadow 0.3s;
+  }
+
+  .nav-brand {
+    display: flex; align-items: center; gap: 0.8rem;
+  }
+  .nav-logo-mark {
+    width: 38px; height: 38px;
+    background: var(--sage);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+  }
+  .nav-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    letter-spacing: 0.02em;
+  }
+  .nav-name span { color: var(--sage); }
+
+  .nav-links {
+    display: flex; gap: 2rem; list-style: none;
+  }
+  .nav-links a {
+    font-family: 'Jost', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--sage); }
+
+  .nav-cta {
+    background: var(--sage);
+    color: white !important;
+    padding: 0.55rem 1.3rem;
+    border-radius: 2rem;
+    transition: background 0.2s !important;
+  }
+  .nav-cta:hover { background: var(--earth) !important; color: white !important; }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex; align-items: center;
+    overflow: hidden;
+  }
+
+  .hero-image {
+    position: absolute; inset: 0;
+    background: url('https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1600&q=80') center/cover no-repeat;
+    transform: scale(1.05);
+    animation: heroZoom 20s ease-out forwards;
+  }
+
+  @keyframes heroZoom {
+    from { transform: scale(1.05); }
+    to   { transform: scale(1.0); }
+  }
+
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      105deg,
+      rgba(46,48,40,0.72) 0%,
+      rgba(46,48,40,0.45) 55%,
+      rgba(122,158,126,0.25) 100%
+    );
+  }
+
+  .hero-content {
+    position: relative; z-index: 2;
+    max-width: 700px;
+    padding: 10rem 3rem 4rem 6rem;
+    animation: fadeUp 1.2s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--sage-light);
+    margin-bottom: 1.2rem;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.08;
+    color: #fff;
+    margin-bottom: 1.5rem;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--sage-light);
+  }
+
+  .hero-sub {
+    font-size: 1rem;
+    font-weight: 300;
+    color: rgba(255,255,255,0.78);
+    line-height: 1.7;
+    max-width: 480px;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-buttons {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: var(--sage);
+    color: white;
+    padding: 0.85rem 2rem;
+    border-radius: 3rem;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-primary:hover { background: var(--earth); transform: translateY(-2px); }
+
+  .btn-outline {
+    border: 1.5px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 0.85rem 2rem;
+    border-radius: 3rem;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  }
+  .btn-outline:hover {
+    border-color: var(--sage-light);
+    background: rgba(122,158,126,0.15);
+    transform: translateY(-2px);
+  }
+
+  .hero-scroll {
+    position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+    z-index: 2;
+    display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    animation: bounce 2s ease infinite;
+  }
+  .hero-scroll::after {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
+  }
+
+  @keyframes bounce {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(5px); }
+  }
+
+  /* SECTIONS SHARED */
+  section { padding: 6rem 3rem; }
+
+  .section-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 1rem;
+    padding: 0.3rem 0.9rem;
+    border: 1px solid var(--sage-light);
+    border-radius: 2rem;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 400;
+    line-height: 1.18;
+    color: var(--text-dark);
+    margin-bottom: 1.2rem;
+  }
+  .section-title em { font-style: italic; color: var(--sage); }
+
+  .section-body {
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.85;
+    color: var(--text-mid);
+    max-width: 600px;
+  }
+
+  /* MISSION */
+  .mission {
+    background: var(--cream);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mission::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(122,158,126,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .mission-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+  }
+
+  .mission-image-wrap {
+    position: relative;
+  }
+
+  .mission-image-wrap img {
+    width: 100%;
+    height: 480px;
+    object-fit: cover;
+    border-radius: 2px;
+    display: block;
+  }
+
+  .mission-image-wrap::before {
+    content: '';
+    position: absolute;
+    top: -16px; left: -16px; right: 16px; bottom: 16px;
+    border: 2px solid var(--sage-light);
+    border-radius: 2px;
+    z-index: 0;
+  }
+
+  .mission-image-wrap img { position: relative; z-index: 1; }
+
+  .mission-quote {
+    position: absolute;
+    bottom: -1.5rem; right: -1.5rem;
+    background: var(--earth);
+    color: white;
+    padding: 1.2rem 1.5rem;
+    max-width: 220px;
+    z-index: 2;
+    border-radius: 2px;
+  }
+
+  .mission-quote p {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .mission-values {
+    display: flex; flex-direction: column; gap: 1.2rem;
+    margin-top: 2.5rem;
+  }
+
+  .mission-value {
+    display: flex; gap: 1rem; align-items: flex-start;
+  }
+
+  .value-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--sage);
+    margin-top: 0.45rem;
+    flex-shrink: 0;
+  }
+
+  .value-text {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-mid);
+  }
+  .value-text strong {
+    display: block;
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+  }
+
+  /* PROGRAMS */
+  .programs {
+    background: var(--warm-white);
+  }
+
+  .programs-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .programs-header .section-body {
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .programs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .program-card {
+    background: var(--cream);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid rgba(122,158,126,0.15);
+  }
+
+  .program-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(46,48,40,0.1);
+  }
+
+  .program-card img {
+    width: 100%; height: 220px;
+    object-fit: cover; display: block;
+  }
+
+  .program-card-body {
+    padding: 1.8rem;
+  }
+
+  .program-icon {
+    font-size: 1.5rem; margin-bottom: 0.8rem;
+  }
+
+  .program-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.6rem;
+  }
+
+  .program-desc {
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: var(--text-mid);
+    font-weight: 300;
+  }
+
+  .program-tag {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--earth);
+    font-weight: 500;
+  }
+
+  /* COVERED AREA / FUNDRAISER */
+  .covered-area {
+    background: var(--sage-pale);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .covered-area::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(139,111,78,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .covered-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+  }
+
+  .covered-image img {
+    width: 100%; height: 400px;
+    object-fit: cover;
+    border-radius: 4px;
+    display: block;
+    box-shadow: 0 20px 60px rgba(46,48,40,0.15);
+  }
+
+  .progress-wrap {
+    margin: 2rem 0;
+  }
+
+  .progress-labels {
+    display: flex; justify-content: space-between;
+    font-size: 0.8rem; color: var(--text-light);
+    margin-bottom: 0.5rem;
+  }
+
+  .progress-labels strong { color: var(--text-dark); font-weight: 500; }
+
+  .progress-bar-bg {
+    height: 8px;
+    background: rgba(122,158,126,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    width: 37%;
+    background: linear-gradient(90deg, var(--sage), var(--earth-light));
+    border-radius: 4px;
+    animation: fillBar 1.5s ease 0.5s both;
+  }
+
+  @keyframes fillBar {
+    from { width: 0%; }
+    to   { width: 37%; }
+  }
+
+  .progress-amount {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.5rem;
+    font-weight: 400;
+    color: var(--text-dark);
+    margin-top: 0.8rem;
+  }
+
+  .progress-amount span {
+    font-size: 1rem;
+    color: var(--text-light);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+  }
+
+  .benefit-list {
+    list-style: none;
+    margin: 1.5rem 0 2rem;
+    display: flex; flex-direction: column; gap: 0.7rem;
+  }
+
+  .benefit-list li {
+    display: flex; align-items: center; gap: 0.7rem;
+    font-size: 0.88rem;
+    color: var(--text-mid);
+  }
+
+  .benefit-list li::before {
+    content: '✦';
+    color: var(--sage);
+    font-size: 0.6rem;
+    flex-shrink: 0;
+  }
+
+  .btn-donate {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    background: var(--earth);
+    color: white;
+    padding: 1rem 2.2rem;
+    border-radius: 3rem;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(139,111,78,0.3);
+  }
+
+  .btn-donate:hover {
+    background: var(--text-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(46,48,40,0.25);
+  }
+
+  .btn-donate .heart { font-size: 1rem; }
+
+  /* FOOTER */
+  footer {
+    background: var(--text-dark);
+    color: rgba(255,255,255,0.65);
+    padding: 3rem;
+    text-align: center;
+  }
+
+  .footer-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: white;
+    margin-bottom: 0.5rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    color: var(--sage-light);
+    margin-bottom: 1.5rem;
+  }
+
+  .footer-links {
+    display: flex; justify-content: center; gap: 2rem;
+    list-style: none; margin-bottom: 1.5rem;
+  }
+
+  .footer-links a {
+    color: rgba(255,255,255,0.45);
+    text-decoration: none;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--sage-light); }
+
+  .footer-copy {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.25);
+  }
+
+  /* DIVIDER */
+  .leaf-divider {
+    text-align: center;
+    color: var(--sage-light);
+    font-size: 1.2rem;
+    letter-spacing: 0.5rem;
+    padding: 0.5rem 0;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 860px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero-content { padding: 8rem 1.5rem 4rem; }
+    .mission-grid, .covered-grid { grid-template-columns: 1fr; gap: 3rem; }
+    .programs-grid { grid-template-columns: 1fr; }
+    section { padding: 4rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo-mark">🐴</div>
+    <div class="nav-name">Kinship <span>Equine Therapy</span></div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#mission">Mission</a></li>
+    <li><a href="#programs">Programs</a></li>
+    <li><a href="#covered-area">Covered Area</a></li>
+    <li><a href="#covered-area" class="nav-cta">Donate</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-image"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Equine-Assisted Therapy</p>
+    <h1 class="hero-title">Healing Happens<br><em>Through Connection</em></h1>
+    <p class="hero-sub">At Kinship Equine Therapy, we believe in the transformative power of the human–horse bond. Our horses meet you where you are — with patience, presence, and trust.</p>
+    <div class="hero-buttons">
+      <a href="#programs" class="btn-primary">Explore Programs</a>
+      <a href="#mission" class="btn-outline">Our Story</a>
+    </div>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- MISSION -->
+<section class="mission" id="mission">
+  <div class="section-inner">
+    <div class="mission-grid">
+      <div class="mission-image-wrap">
+        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80" alt="Horse in peaceful pasture"/>
+        <div class="mission-quote">
+          <p>"In the presence of a horse, the heart remembers what it means to be still."</p>
+        </div>
+      </div>
+      <div>
+        <span class="section-tag">Our Mission</span>
+        <h2 class="section-title">Connecting People,<br>Horses &amp; <em>Healing</em></h2>
+        <p class="section-body">Kinship Equine Therapy exists to provide a safe, nurturing space where individuals facing emotional, behavioral, and developmental challenges can experience the profound healing that comes from authentic connection with horses.</p>
+        <div class="mission-values">
+          <div class="mission-value">
+            <div class="value-dot"></div>
+            <div class="value-text"><strong>Presence over Performance</strong>We meet every participant where they are — with no agenda, only compassionate attention.</div>
+          </div>
+          <div class="mission-value">
+            <div class="value-dot"></div>
+            <div class="value-text"><strong>Safety First, Always</strong>Our certified therapists and horses ensure a protected environment for every session.</div>
+          </div>
+          <div class="mission-value">
+            <div class="value-dot"></div>
+            <div class="value-text"><strong>Inclusive Community</strong>We serve veterans, youth, trauma survivors, and families — regardless of ability or background.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRAMS -->
+<section class="programs" id="programs">
+  <div class="section-inner">
+    <div class="programs-header">
+      <span class="section-tag">Our Programs</span>
+      <h2 class="section-title">Where Healing Begins</h2>
+      <p class="section-body">Each program is thoughtfully designed around the natural wisdom of horses — gentle guides on the path to wholeness.</p>
+    </div>
+    <div class="programs-grid">
+
+      <div class="program-card">
+        <img src="https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=600&q=80" alt="Child with horse"/>
+        <div class="program-card-body">
+          <div class="program-icon">🌿</div>
+          <div class="program-name">Youth &amp; Families</div>
+          <p class="program-desc">Building confidence, emotional regulation, and trust in young people through guided interactions with our gentle therapy horses.</p>
+          <span class="program-tag">Ages 5 and up &nbsp;·&nbsp; Weekly sessions</span>
+        </div>
+      </div>
+
+      <div class="program-card">
+        <img src="https://images.unsplash.com/photo-1574170609278-57c5ab09e69b?w=600&q=80" alt="Veterans equine therapy"/>
+        <div class="program-card-body">
+          <div class="program-icon">🎖️</div>
+          <div class="program-name">Veterans &amp; First Responders</div>
+          <p class="program-desc">A safe space for those who carry invisible wounds. Equine-assisted work addresses PTSD, anxiety, and the challenges of transition.</p>
+          <span class="program-tag">No cost to veterans &nbsp;·&nbsp; Certified EAGALA</span>
+        </div>
+      </div>
+
+      <div class="program-card">
+        <img src="https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=600&q=80" alt="Adult equine therapy"/>
+        <div class="program-card-body">
+          <div class="program-icon">🤍</div>
+          <div class="program-name">Individual &amp; Group Therapy</div>
+          <p class="program-desc">Therapeutic sessions led by licensed mental health professionals, using horse-assisted activities to explore emotions and foster growth.</p>
+          <span class="program-tag">All ages &nbsp;·&nbsp; Insurance accepted</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- COVERED AREA FUNDRAISER -->
+<section class="covered-area" id="covered-area">
+  <div class="section-inner">
+    <div class="covered-grid">
+      <div class="covered-image">
+        <img src="https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=800&q=80" alt="Horse barn and arena"/>
+      </div>
+      <div>
+        <span class="section-tag">Campaign</span>
+        <h2 class="section-title">Help Us Build a<br><em>Covered Arena</em></h2>
+        <p class="section-body">Rain, heat, and cold stop our sessions — and they stop healing. A covered arena means year-round therapy for the people who need it most.</p>
+
+        <div class="progress-wrap">
+          <div class="progress-labels">
+            <span>Progress</span>
+            <span><strong>$18,500</strong> of $50,000 goal</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill"></div>
+          </div>
+          <div class="progress-amount">$18,500 <span>raised · 37%</span></div>
+        </div>
+
+        <ul class="benefit-list">
+          <li>Year-round sessions, rain or shine</li>
+          <li>Safer ground footing for horses and participants</li>
+          <li>Increased capacity — more lives touched</li>
+          <li>Host community events and awareness days</li>
+        </ul>
+
+        <a href="#" class="btn-donate">
+          <span class="heart">♥</span>
+          Donate to the Covered Arena
+        </a>
+        <p style="margin-top:0.8rem; font-size:0.75rem; color:var(--text-light);">Kinship Equine Therapy is a 501(c)(3) nonprofit. All donations are tax-deductible.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-name">Kinship Equine Therapy</div>
+  <div class="footer-tagline">Healing Happens Through Connection</div>
+  <ul class="footer-links">
+    <li><a href="#mission">Mission</a></li>
+    <li><a href="#programs">Programs</a></li>
+    <li><a href="#covered-area">Donate</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <div class="footer-copy">© 2026 Kinship Equine Therapy · All Rights Reserved</div>
+</footer>
+
+</body>
+</html>
